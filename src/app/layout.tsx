@@ -2,7 +2,9 @@ import "@/styles/globals.css";
 
 import { Metadata } from "next";
 import React from "react";
+import { SessionProvider } from "next-auth/react";
 import { SiteHeader } from "@/components/site-header";
+import { auth } from "@/auth";
 import { cn } from "@/lib/utils";
 import { fontSans } from "@/lib/fonts";
 import { siteConfig } from "@/config/site";
@@ -14,17 +16,19 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   icons: {
-    icon: "/favicon.ico"
-  }
+    icon: "/favicon.ico",
+  },
 };
 
 interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const session = auth();
+
   return (
-    <>
+    <SessionProvider session={session}>
       <html lang="en" suppressHydrationWarning>
         <head />
         <body
@@ -39,6 +43,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
           </div>
         </body>
       </html>
-    </>
+    </SessionProvider>
   );
 }

@@ -53,7 +53,10 @@ export function UserNav() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Link href="/login" className={buttonVariants({ variant: "ghost" })}>
+          <Link
+            href="/auth/login"
+            className={buttonVariants({ variant: "ghost" })}
+          >
             Sign In
           </Link>
         )}

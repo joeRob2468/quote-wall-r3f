@@ -30,7 +30,7 @@ export const login = async (
       password,
       redirectTo: callbackUrl || "/",
     });
-    revalidatePath("/login");
+    revalidatePath("/auth/login");
   } catch (error) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {

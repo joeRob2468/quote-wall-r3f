@@ -6,6 +6,9 @@ import {
   LogIn,
   AlertCircle,
   CheckCircle,
+  NotepadText,
+  Contact,
+  User,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -41,4 +44,7 @@ export const Icons = {
   settings: (props: LucideProps) => <Settings {...props} />,
   alertCircle: (props: LucideProps) => <AlertCircle {...props} />,
   checkCircle: (props: LucideProps) => <CheckCircle {...props} />,
+  notepadText: (props: LucideProps) => <NotepadText {...props} />,
+  contact: (props: LucideProps) => <Contact {...props} />,
+  user: (props: LucideProps) => <User {...props} />,
 };

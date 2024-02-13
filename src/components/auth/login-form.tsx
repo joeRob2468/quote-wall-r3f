@@ -16,7 +16,7 @@ import { FormSuccess } from "@/components/form-success";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { LoginSchema } from "@/schemas";
-import { SignIn } from "@/components/auth/auth-buttons";
+import { SignInButton } from "@/components/auth/auth-buttons";
 import { login } from "@/actions/login";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
@@ -118,8 +118,8 @@ export const LoginForm = () => {
       </div>
 
       <div className="mt-6 flex flex-row gap-3 items-center justify-center">
-        <SignIn provider="google" />
-        <SignIn provider="github" />
+        <SignInButton provider="google" />
+        <SignInButton provider="github" />
       </div>
 
       <p className="mt-10 text-center text-sm">

@@ -33,14 +33,11 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <head />
         <body
           className={cn(
-            "min-h-screen bg-background font-sans antialiased dark",
+            "min-h-screen bg-zinc-950 font-sans antialiased dark",
             fontSans.variable
           )}
         >
-          <div className="relative flex min-h-screen flex-col">
-            <SiteHeader />
-            <div className="flex-1">{children}</div>
-          </div>
+          {children}
         </body>
       </html>
     </SessionProvider>

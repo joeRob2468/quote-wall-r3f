@@ -13,7 +13,7 @@ import {
 import { Icons } from "@/components/icons";
 import Image from "next/image";
 import Link from "next/link";
-import { SignOut } from "@/components/auth/auth-buttons";
+import { SignOutLink } from "@/components/auth/auth-buttons";
 import { buttonVariants } from "@/components/ui/button";
 import { useCurrentUser } from "@/hooks/use-current-user";
 
@@ -48,7 +48,7 @@ export function UserNav() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <SignOut type="link" />
+                <SignOutLink />
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

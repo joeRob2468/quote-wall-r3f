@@ -4,12 +4,13 @@ import { signIn, signOut } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
+import { cn } from "@/lib/utils";
 
-type SignInProps = {
+type SignInButtonProps = {
   provider: "github" | "google";
 } & React.ComponentPropsWithRef<typeof Button>;
 
-export function SignIn({ provider, ...props }: SignInProps) {
+export function SignInButton({ provider, ...props }: SignInButtonProps) {
   return (
     <form action={() => signIn(provider)}>
       {provider === "google" && (
@@ -29,30 +30,30 @@ export function SignIn({ provider, ...props }: SignInProps) {
   );
 }
 
-type SignOutProps =
-  | ({
-      type: "button";
-    } & React.ComponentPropsWithRef<typeof Button>)
-  | {
-      type: "link";
-    };
-
-export function SignOut({ type, ...props }: SignOutProps) {
-  const handleSubmit = () => signOut();
-
-  return type === "button" ? (
-    <form action={() => handleSubmit()}>
+export function SignOutButton({
+  ...props
+}: React.ComponentPropsWithRef<typeof Button>) {
+  return (
+    <form action={() => signOut()}>
       <Button variant="ghost" className="w-full p-0" {...props}>
         <Icons.logOut className="h-4 w-4 mr-2" /> Sign Out
       </Button>
     </form>
-  ) : (
-    <div
-      className="cursor-pointer flex items-center"
-      onClick={() => handleSubmit()}
+  );
+}
+
+export function SignOutLink({
+  className,
+  ...props
+}: React.ComponentProps<"a">) {
+  return (
+    <a
+      className={cn("cursor-pointer flex items-center", className)}
+      onClick={() => signOut()}
+      {...props}
     >
       <Icons.logOut className="h-4 w-4 mr-2" />
       Sign out
-    </div>
+    </a>
   );
 }

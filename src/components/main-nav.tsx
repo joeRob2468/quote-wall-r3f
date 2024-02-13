@@ -2,12 +2,12 @@ import * as React from "react";
 
 import { Icons } from "@/components/icons";
 import Link from "next/link";
-import { NavItem } from "@/types/nav";
+import { NavigationItem } from "@/types/navigation";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 
 interface MainNavProps {
-  items?: NavItem[];
+  items?: NavigationItem[];
 }
 
 export function MainNav({ items }: MainNavProps) {

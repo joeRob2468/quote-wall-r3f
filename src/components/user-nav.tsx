@@ -10,9 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Icons } from "@/components/icons";
 import Image from "next/image";
 import Link from "next/link";
+import { Settings } from "@/components/icons";
 import { SignOutLink } from "@/components/auth/auth-buttons";
 import { buttonVariants } from "@/components/ui/button";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -43,7 +43,7 @@ export function UserNav() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Link href="/dashboard/settings" className="flex items-center">
-                  <Icons.settings className="h-4 w-4 mr-2" />
+                  <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </Link>
               </DropdownMenuItem>

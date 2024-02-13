@@ -1,4 +1,4 @@
-import { Icons } from "@/components/icons";
+import { CheckCircle } from "@/components/icons";
 
 interface FormSuccessProps {
   message?: string;
@@ -9,7 +9,7 @@ export const FormSuccess = ({ message }: FormSuccessProps) => {
 
   return (
     <div className="bg-emerald-500/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-emerald-500 mb-4">
-      <Icons.checkCircle className="h-4 w-4" />
+      <CheckCircle className="h-4 w-4" />
       <p>{message}</p>
     </div>
   );

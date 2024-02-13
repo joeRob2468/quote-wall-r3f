@@ -1,4 +1,5 @@
-import { Icons } from "@/components/icons";
+import { Contact, NotepadText, Settings, User } from "@/components/icons";
+
 import type { NavigationItem } from "@/types/navigation";
 
 export const primaryNavigation: NavigationItem[] = [
@@ -17,17 +18,17 @@ export const dashboardNavigation: NavigationItem[] = [
   {
     title: "Quotes",
     href: "#",
-    icon: Icons.notepadText,
+    icon: NotepadText,
   },
   {
     title: "Authors",
     href: "#",
-    icon: Icons.contact,
+    icon: Contact,
   },
   {
     title: "Users",
     href: "#",
-    icon: Icons.user,
+    icon: User,
   },
 ];
 
@@ -35,6 +36,6 @@ export const dashboardUserNavigation: NavigationItem[] = [
   {
     title: "Settings",
     href: "#",
-    icon: Icons.settings,
+    icon: Settings,
   },
 ];

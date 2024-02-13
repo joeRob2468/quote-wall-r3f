@@ -1,4 +1,4 @@
-import { Icons } from "@/components/icons";
+import { AlertCircle } from "@/components/icons";
 
 interface FormErrorProps {
   message?: string;
@@ -9,7 +9,7 @@ export const FormError = ({ message }: FormErrorProps) => {
 
   return (
     <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-4">
-      <Icons.alertCircle className="h-4 w-4" />
+      <AlertCircle className="h-4 w-4" />
       <p>{message}</p>
     </div>
   );

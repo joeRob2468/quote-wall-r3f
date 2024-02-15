@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   return (
     <>
-      <h1 className="text-3xl font-extrabold md:text-4xl">Dashboard</h1>
+      <h1 className="text-xl font-extrabold md:text-2xl">Dashboard</h1>
       <p>Welcome to the dashboard.</p>
     </>
   );

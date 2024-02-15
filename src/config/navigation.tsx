@@ -27,7 +27,7 @@ export const dashboardNavigation: NavigationItem[] = [
   },
   {
     title: "Users",
-    href: "#",
+    href: "/dashboard/users",
     icon: User,
   },
 ];

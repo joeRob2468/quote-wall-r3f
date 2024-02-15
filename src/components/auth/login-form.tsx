@@ -49,15 +49,9 @@ export const LoginForm = () => {
       setSuccess("");
 
       const response = await login(values, callbackUrl);
-      if (response?.error) {
-        form.reset();
-        setError(response.error);
-      }
-
-      if (response?.ok) {
-        form.reset();
-        //setSuccess(response.success);
-      }
+      form.reset();
+      setError(response.error);
+      setSuccess(response.success);
     });
   };
 

@@ -14,14 +14,14 @@ export const login = async (
   const validatedFields = LoginSchema.safeParse(values);
 
   if (!validatedFields.success) {
-    return { ok: false, error: "Invalid fields" };
+    return { error: "Invalid fields" };
   }
 
   const { email, password } = validatedFields.data;
 
   const existingUser = await getUserByEmail(email);
   if (!existingUser || !existingUser.email || !existingUser.password) {
-    return { ok: false, error: "Email does not exist" };
+    return { error: "Email does not exist" };
   }
 
   try {
@@ -31,12 +31,13 @@ export const login = async (
       redirectTo: callbackUrl || "/",
     });
     revalidatePath("/auth/login");
+    return { success: "Signed in successfully." };
   } catch (error) {
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
-        return { ok: false, error: "Invalid credentials" };
+        return { error: "Invalid credentials" };
       } else {
-        return { ok: false, error: error.type };
+        return { error: error.type };
       }
     }
 

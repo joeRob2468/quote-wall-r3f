@@ -50,16 +50,17 @@ const UserSettingsForm = () => {
 
   const onSubmit = async (values: z.infer<typeof UserSettingsSchema>) => {
     startTransition(async () => {
+      setError("");
+      setSuccess("");
+
       try {
         const response = await updateUserSettings(values);
-        if (response.error) {
-          setError(response.error);
-        }
-
         if (response.success) {
           update();
-          setSuccess(response.success);
         }
+
+        setError(response.error);
+        setSuccess(response.success);
       } catch (error) {
         setError("Something went wrong.");
       }

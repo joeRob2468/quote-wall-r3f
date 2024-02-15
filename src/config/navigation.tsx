@@ -35,7 +35,7 @@ export const dashboardNavigation: NavigationItem[] = [
 export const dashboardUserNavigation: NavigationItem[] = [
   {
     title: "Settings",
-    href: "#",
+    href: "/dashboard/settings",
     icon: Settings,
   },
 ];

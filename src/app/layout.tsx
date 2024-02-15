@@ -25,7 +25,7 @@ interface RootLayoutProps {
 }
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-  const session = auth();
+  const session = await auth();
 
   return (
     <SessionProvider session={session}>

@@ -3,14 +3,15 @@
 import {
   LucideProps,
   type LucideIcon,
-  LogOut as LogOutIcon,
-  Settings as SettingsIcon,
-  LogIn as LogInIcon,
-  AlertCircle as AlertCircleIcon,
-  CheckCircle as CheckCircleIcon,
-  NotepadText as NotepadTextIcon,
-  Contact as ContactIcon,
-  User as UserIcon,
+  LogOutIcon,
+  SettingsIcon,
+  LogInIcon,
+  AlertCircleIcon,
+  CheckCircleIcon,
+  NotepadTextIcon,
+  ContactIcon,
+  UserIcon,
+  MoreHorizontalIcon,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -51,6 +52,9 @@ const CheckCircle = (props: LucideProps) => <CheckCircleIcon {...props} />;
 const NotepadText = (props: LucideProps) => <NotepadTextIcon {...props} />;
 const Contact = (props: LucideProps) => <ContactIcon {...props} />;
 const User = (props: LucideProps) => <UserIcon {...props} />;
+const MoreHorizontal = (props: LucideProps) => (
+  <MoreHorizontalIcon {...props} />
+);
 
 export {
   Logo,
@@ -64,4 +68,5 @@ export {
   NotepadText,
   Contact,
   User,
+  MoreHorizontal,
 };

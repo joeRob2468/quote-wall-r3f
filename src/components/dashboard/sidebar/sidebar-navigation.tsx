@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { NavigationItem } from "@/types/navigation";
+import { UserRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { useActivePath } from "@/hooks/use-active-path";
+import { useCurrentRole } from "@/hooks/use-current-role";
 
 interface SidebarNavigationProps {
   items?: NavigationItem[];
@@ -11,6 +13,14 @@ interface SidebarNavigationProps {
 
 export const SidebarNavigation = ({ items }: SidebarNavigationProps) => {
   const checkActivePath = useActivePath();
+  const role = useCurrentRole();
+
+  items = items?.filter(
+    (item) =>
+      !item.requiresAdminRole ||
+      (item.requiresAdminRole && role === UserRole.ADMIN)
+  );
+
   return (
     <nav className="flex flex-1 flex-col space-y-3">
       {items?.map((item, index) => (

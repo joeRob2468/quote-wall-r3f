@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Logo } from "@/components/icons";
 import { NavigationItem } from "@/types/navigation";
+import { UserRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 import { useActivePath } from "@/hooks/use-active-path";
+import { useCurrentRole } from "@/hooks/use-current-role";
 
 interface MainNavProps {
   items?: NavigationItem[];
@@ -13,6 +15,13 @@ interface MainNavProps {
 
 export function MainNav({ items }: MainNavProps) {
   const checkActivePath = useActivePath();
+  const role = useCurrentRole();
+
+  items = items?.filter(
+    (item) =>
+      !item.requiresAdminRole ||
+      (item.requiresAdminRole && role === UserRole.ADMIN)
+  );
 
   return (
     <div className="flex gap-6 md:gap-10">

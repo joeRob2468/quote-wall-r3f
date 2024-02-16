@@ -1,10 +1,11 @@
 "use server";
 
+import { User, UserRole } from "@prisma/client";
 import { getUserByEmail, getUserById } from "@/data/user";
 
-import { User } from "@prisma/client";
 import { UserUpdateSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
+import { currentRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -13,6 +14,11 @@ export const updateUser = async (
   id: User["id"],
   values: z.infer<typeof UserUpdateSchema>
 ) => {
+  const sessionRole = await currentRole();
+  if (sessionRole !== UserRole.ADMIN) {
+    return { error: "Unauthorized" };
+  }
+
   const dbUser = await getUserById(id);
 
   if (!dbUser) {
@@ -60,6 +66,11 @@ export const updateUser = async (
 };
 
 export const deleteUser = async (id: User["id"]) => {
+  const sessionRole = await currentRole();
+  if (sessionRole !== UserRole.ADMIN) {
+    return { error: "Unauthorized" };
+  }
+
   const dbUser = await getUserById(id);
 
   if (!dbUser) {

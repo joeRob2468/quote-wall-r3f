@@ -1,9 +1,11 @@
 import { getSafeUserById, getUserById } from "@/data/user";
 
-import { ErrorWrapper } from "@/components/dashboard/error-wrapper";
+import { ErrorWrapper } from "@/components/error-wrapper";
 import { Metadata } from "next";
 import { PageHeading } from "@/components/layout/page-heading";
+import { RoleGate } from "@/components/auth/role-gate";
 import { UserEditForm } from "@/components/dashboard/users/user-edit-form";
+import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -28,7 +30,7 @@ export default async function EditPage({ params }: EditPageProps) {
   }
 
   return (
-    <>
+    <RoleGate allowedRole={UserRole.ADMIN}>
       <PageHeading
         title="Edit User"
         description="Manage user settings and set email preferences."
@@ -36,6 +38,6 @@ export default async function EditPage({ params }: EditPageProps) {
       <div className="flex flex-col pt-8">
         <UserEditForm user={user} />
       </div>
-    </>
+    </RoleGate>
   );
 }

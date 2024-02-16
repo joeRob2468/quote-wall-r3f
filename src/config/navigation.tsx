@@ -10,7 +10,6 @@ export const primaryNavigation: NavigationItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    requiresAuth: true,
   },
 ];
 
@@ -29,6 +28,7 @@ export const dashboardNavigation: NavigationItem[] = [
     title: "Users",
     href: "/dashboard/users",
     icon: User,
+    requiresAdminRole: true,
   },
 ];
 

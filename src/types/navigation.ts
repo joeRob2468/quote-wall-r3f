@@ -4,6 +4,5 @@ export interface NavigationItem {
   icon?: any;
   disabled?: boolean;
   external?: boolean;
-  requiresAuth?: boolean;
   requiresAdminRole?: boolean;
 }

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { PageHeading } from "@/components/layout/page-heading";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -7,9 +8,6 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <>
-      <h1 className="text-xl font-extrabold md:text-2xl">Dashboard</h1>
-      <p>Welcome to the dashboard.</p>
-    </>
+    <PageHeading title="Dashboard" description="Welcome to the dashboard." />
   );
 }

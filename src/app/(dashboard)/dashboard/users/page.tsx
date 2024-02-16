@@ -1,5 +1,6 @@
 import { DataTable } from "@/components/ui/data-table";
 import { Metadata } from "next";
+import { PageHeading } from "@/components/layout/page-heading";
 import { columns } from "./columns";
 import { getSafeUsers } from "@/data/user";
 
@@ -13,8 +14,10 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <h1 className="text-xl font-bold md:text-2xl">Users</h1>
-      <p>Manage users and configure settings.</p>
+      <PageHeading
+        title="Users"
+        description="Manage users and configure settings."
+      />
       <div className="flex flex-col py-8">
         <DataTable columns={columns} data={users} />
       </div>

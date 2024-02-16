@@ -1,5 +1,5 @@
 import { SafeUser } from "@/types/user";
-import { User } from "next-auth";
+import { User } from "@prisma/client";
 import { db } from "@/lib/db";
 import { prismaExclude } from "@/lib/utils";
 

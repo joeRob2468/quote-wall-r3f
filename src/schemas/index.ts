@@ -56,3 +56,14 @@ export const UserSettingsSchema = z
       path: ["password"],
     }
   );
+
+  export const UserUpdateSchema = z.object({
+    name: z.optional(z.string()),
+    email: z.optional(z.string().email()),
+    password: z.string().min(6).optional().or(z.literal("")),
+    role: z.optional(z.nativeEnum(UserRole), {
+      invalid_type_error: "Invalid role.",
+    }),
+    emailVerified: z.optional(z.coerce.date()),
+    image: z.optional(z.string().url()),
+  });

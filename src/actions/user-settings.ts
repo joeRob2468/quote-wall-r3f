@@ -24,7 +24,7 @@ export const updateUserSettings = async (
 
   const validatedFields = UserSettingsSchema.safeParse(values);
   if (!validatedFields.success) {
-    return { ok: false, error: "Invalid fields" };
+    return { error: "Invalid fields" };
   }
 
   let { name, email, role, password, newPassword } = validatedFields.data;

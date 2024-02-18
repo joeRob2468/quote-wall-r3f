@@ -47,11 +47,14 @@ model User {
   name          String?
   email         String?   @unique
   password      String?
-  role          UserRole @default(USER)
+  role          UserRole  @default(USER)
   emailVerified DateTime?
   image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   accounts      Account[]
   sessions      Session[]
+  author        Author?
 }
 
 model VerificationToken {
@@ -60,4 +63,25 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Author {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  quotes    Quote[]
+}
+
+model Quote {
+  id        String   @id @default(cuid())
+  body      String
+  date      DateTime
+  context   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId  String
+  author    Author   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }

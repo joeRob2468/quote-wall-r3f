@@ -21,7 +21,7 @@ export const dashboardNavigation: NavigationItem[] = [
   },
   {
     title: "Authors",
-    href: "#",
+    href: "/dashboard/authors",
     icon: Contact,
   },
   {

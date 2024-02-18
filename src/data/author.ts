@@ -10,11 +10,11 @@ export const getAuthorById = async (id: string): Promise<Author | null> => {
   }
 };
 
-export const getAuthors = async (): Promise<Author[] | null> => {
+export const getAuthors = async (): Promise<Author[]> => {
   try {
     const authors = await db.author.findMany();
     return authors;
   } catch {
-    return null;
+    return [];
   }
 };

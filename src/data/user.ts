@@ -23,12 +23,12 @@ export const getUserById = async (id: string): Promise<User | null> => {
   }
 };
 
-export const getUsers = async (): Promise<User[] | null> => {
+export const getUsers = async (): Promise<User[]> => {
   try {
     const users = await db.user.findMany();
     return users;
   } catch {
-    return null;
+    return [];
   }
 };
 

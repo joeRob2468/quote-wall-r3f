@@ -12,6 +12,9 @@ import {
   ContactIcon,
   UserIcon,
   MoreHorizontalIcon,
+  ChevronsUpDownIcon,
+  CheckIcon,
+  PlusIcon,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -55,6 +58,11 @@ const User = (props: LucideProps) => <UserIcon {...props} />;
 const MoreHorizontal = (props: LucideProps) => (
   <MoreHorizontalIcon {...props} />
 );
+const ChevronsUpDown = (props: LucideProps) => (
+  <ChevronsUpDownIcon {...props} />
+);
+const Check = (props: LucideProps) => <CheckIcon {...props} />;
+const Plus = (props: LucideProps) => <PlusIcon {...props} />;
 
 export {
   Logo,
@@ -69,4 +77,7 @@ export {
   Contact,
   User,
   MoreHorizontal,
+  ChevronsUpDown,
+  Check,
+  Plus,
 };

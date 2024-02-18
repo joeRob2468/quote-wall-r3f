@@ -1,6 +1,5 @@
 "use client";
 
-import { Author, UserRole } from "@prisma/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,11 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { Author } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { MoreHorizontal } from "@/components/icons";
-import { SafeUser } from "@/types/user";
 
 export const columns: ColumnDef<Author>[] = [
   {
@@ -21,7 +20,7 @@ export const columns: ColumnDef<Author>[] = [
     header: "Name",
   },
   {
-    accessorKey: "user",
+    accessorKey: "user.name",
     header: "User",
   },
   {

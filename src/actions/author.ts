@@ -5,6 +5,7 @@ import { AuthorSchema } from "@/schemas/author";
 import { db } from "@/lib/db";
 import { getAuthorById } from "@/data/author";
 import { getUserById } from "@/data/user";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const createAuthor = async (values: z.infer<typeof AuthorSchema>) => {
@@ -30,6 +31,7 @@ const createAuthor = async (values: z.infer<typeof AuthorSchema>) => {
       },
     });
 
+    revalidatePath("/dashboard/authors");
     return { success: "Author created", author: newAuthor };
   } catch {
     return { error: "Failed to create author" };
@@ -67,10 +69,11 @@ const updateAuthor = async (
       },
     });
 
+    revalidatePath("/dashboard/authors");
     return { success: "Author updated" };
   } catch {
     return { error: "Failed to update author" };
   }
 };
 
-export { createAuthor };
+export { createAuthor, updateAuthor };

@@ -3,6 +3,8 @@ import { ErrorWrapper } from "@/components/error-wrapper";
 import { Metadata } from "next";
 import { PageHeading } from "@/components/layout/page-heading";
 import { db } from "@/lib/db";
+import { getAuthorWithUser } from "@/data/author";
+import { getSafeUsers } from "@/data/user";
 import { prismaExclude } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -17,17 +19,7 @@ export interface EditAuthorPageProps {
 }
 
 export default async function EditAuthorPage({ params }: EditAuthorPageProps) {
-  const author = await db.author.findUnique({
-    where: { id: params.id },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
+  const author = await getAuthorWithUser(params.id);
 
   if (!author) {
     return (
@@ -38,8 +30,7 @@ export default async function EditAuthorPage({ params }: EditAuthorPageProps) {
     );
   }
 
-  const users = await db.user.findMany({
-    select: prismaExclude("User", ["password"]),
+  const users = await getSafeUsers({
     where: {
       author: null,
     },

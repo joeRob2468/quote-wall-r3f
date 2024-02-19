@@ -23,8 +23,8 @@ import {
 } from "@/components/ui/popover";
 import { useState, useTransition } from "react";
 
-import { Author } from "@prisma/client";
 import { AuthorSchema } from "@/schemas";
+import { AuthorWithUser } from "@/types/author";
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
@@ -37,9 +37,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export interface AuthorEditFormProps {
-  author: {
-    user: { name: string | null; id: string } | null;
-  } & Author;
+  author: AuthorWithUser;
   users: SafeUser[];
 }
 

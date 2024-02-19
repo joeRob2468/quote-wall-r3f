@@ -1,3 +1,5 @@
+"use server";
+
 import { SafeUser } from "@/types/user";
 import { User } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -38,6 +40,7 @@ export const getSafeUserByEmail = async (
   try {
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
+      select: prismaExclude("User", ["password"]),
     });
     return user;
   } catch {
@@ -47,20 +50,27 @@ export const getSafeUserByEmail = async (
 
 export const getSafeUserById = async (id: string): Promise<SafeUser | null> => {
   try {
-    const user = await db.user.findUnique({ where: { id } });
+    const user = await db.user.findUnique({
+      where: { id },
+      select: prismaExclude("User", ["password"]),
+    });
     return user;
   } catch {
     return null;
   }
 };
 
-export const getSafeUsers = async (): Promise<SafeUser[]> => {
+export const getSafeUsers = async (options?: {
+  where?: object;
+}): Promise<SafeUser[]> => {
   try {
     const users = await db.user.findMany({
       select: prismaExclude("User", ["password"]),
+      where: { ...options?.where },
     });
     return users;
-  } catch {
+  } catch (error) {
+    console.log(error);
     return [];
   }
 };

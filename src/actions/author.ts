@@ -87,4 +87,26 @@ const updateAuthor = async (
   }
 };
 
-export { createAuthor, updateAuthor };
+const deleteAuthor = async (id: Author["id"]) => {
+  const sessionUser = await currentUser();
+  if (!sessionUser) {
+    return { error: "Unauthorized" };
+  }
+
+  const existingAuthor = await getAuthor(id);
+  if (!existingAuthor) {
+    return { error: "Author not found" };
+  }
+  try {
+    const deletedAuthor = await db.author.delete({
+      where: { id: existingAuthor.id },
+    });
+
+    revalidatePath("/dashboard/authors");
+    return { success: "Author deleted", author: deletedAuthor };
+  } catch {
+    return { error: "Failed to update author" };
+  }
+};
+
+export { createAuthor, updateAuthor, deleteAuthor };

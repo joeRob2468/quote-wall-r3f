@@ -1,5 +1,16 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Check, ChevronsUpDown } from "@/components/icons";
 import {
   Command,
@@ -21,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { deleteAuthor, updateAuthor } from "@/actions/author";
 import { useState, useTransition } from "react";
 
 import { AuthorSchema } from "@/schemas";
@@ -31,8 +43,8 @@ import { FormSuccess } from "@/components/form-success";
 import { Input } from "@/components/ui/input";
 import { SafeUser } from "@/types/user";
 import { cn } from "@/lib/utils";
-import { updateAuthor } from "@/actions/author";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -45,6 +57,7 @@ export const AuthorEditForm = ({ author, users }: AuthorEditFormProps) => {
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const userOptions = users.map((user) => {
     return {
@@ -75,6 +88,24 @@ export const AuthorEditForm = ({ author, users }: AuthorEditFormProps) => {
 
       try {
         const response = await updateAuthor(author.id, values);
+        setError(response.error);
+        setSuccess(response.success);
+      } catch (error) {
+        setError("Something went wrong");
+      }
+    });
+  };
+
+  const onDelete = async () => {
+    startTransition(async () => {
+      setError("");
+      setSuccess("");
+
+      try {
+        const response = await deleteAuthor(author.id);
+        if (response.success) {
+          router.push("/dashboard/authors");
+        }
         setError(response.error);
         setSuccess(response.success);
       } catch (error) {
@@ -169,10 +200,38 @@ export const AuthorEditForm = ({ author, users }: AuthorEditFormProps) => {
             />
             <FormError message={error}></FormError>
             <FormSuccess message={success}></FormSuccess>
+
             <div className="flex flex-row justify-between">
               <Button disabled={isPending} type="submit">
                 Save Changes
               </Button>
+
+              <AlertDialog>
+                <Button disabled={isPending} variant="outline" asChild>
+                  <AlertDialogTrigger>Delete Author</AlertDialogTrigger>
+                </Button>
+
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      this author and remove their data. Their quotes will not
+                      be deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <Button variant="outline" asChild>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    </Button>
+                    <Button onClick={() => onDelete()} asChild>
+                      <AlertDialogAction>Continue</AlertDialogAction>
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </form>

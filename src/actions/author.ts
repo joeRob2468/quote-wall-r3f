@@ -2,6 +2,7 @@
 
 import { Author } from "@prisma/client";
 import { AuthorSchema } from "@/schemas/author";
+import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getAuthorById } from "@/data/author";
 import { getUserById } from "@/data/user";
@@ -9,6 +10,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const createAuthor = async (values: z.infer<typeof AuthorSchema>) => {
+  const sessionUser = await currentUser();
+  if (!sessionUser) {
+    return { error: "Unauthorized" };
+  }
+
   const validatedFields = AuthorSchema.safeParse(values);
   if (!validatedFields.success) {
     return { error: "Invalid fields" };
@@ -42,6 +48,11 @@ const updateAuthor = async (
   id: Author["id"],
   values: z.infer<typeof AuthorSchema>
 ) => {
+  const sessionUser = await currentUser();
+  if (!sessionUser) {
+    return { error: "Unauthorized" };
+  }
+
   const existingAuthor = await getAuthorById(id);
   if (!existingAuthor) {
     return { error: "Author not found" };

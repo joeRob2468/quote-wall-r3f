@@ -1,7 +1,8 @@
 "use server";
 
+import { Quote, UserRole } from "@prisma/client";
+
 import { FullQuote } from "@/types/quote";
-import { Quote } from "@prisma/client";
 import { QuoteSchema } from "@/schemas/";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -93,7 +94,7 @@ const updateQuote = async (
 
 const deleteQuote = async (id: Quote["id"]) => {
   const sessionUser = await currentUser();
-  if (!sessionUser) {
+  if (!sessionUser || sessionUser.role !== UserRole.ADMIN) {
     return { error: "Unauthorized" };
   }
 

@@ -1,6 +1,7 @@
 "use server";
 
-import { Author } from "@prisma/client";
+import { Author, UserRole } from "@prisma/client";
+
 import { AuthorSchema } from "@/schemas/author";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -89,7 +90,7 @@ const updateAuthor = async (
 
 const deleteAuthor = async (id: Author["id"]) => {
   const sessionUser = await currentUser();
-  if (!sessionUser) {
+  if (!sessionUser || sessionUser.role !== UserRole.ADMIN) {
     return { error: "Unauthorized" };
   }
 

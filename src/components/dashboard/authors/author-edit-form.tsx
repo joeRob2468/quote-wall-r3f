@@ -42,7 +42,9 @@ import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { Input } from "@/components/ui/input";
 import { SafeUser } from "@/types/user";
+import { UserRole } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { useCurrentRole } from "@/hooks/use-current-role";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
@@ -58,6 +60,9 @@ export const AuthorEditForm = ({ author, users }: AuthorEditFormProps) => {
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const sessionRole = useCurrentRole();
+
+  const showDestructiveActions = sessionRole === UserRole.ADMIN;
 
   const userOptions = users.map((user) => {
     return {
@@ -200,12 +205,13 @@ export const AuthorEditForm = ({ author, users }: AuthorEditFormProps) => {
             />
             <FormError message={error}></FormError>
             <FormSuccess message={success}></FormSuccess>
+          </div>
+          <div className="flex flex-row justify-between">
+            <Button disabled={isPending} type="submit">
+              Save Changes
+            </Button>
 
-            <div className="flex flex-row justify-between">
-              <Button disabled={isPending} type="submit">
-                Save Changes
-              </Button>
-
+            {showDestructiveActions && (
               <AlertDialog>
                 <Button disabled={isPending} variant="outline" asChild>
                   <AlertDialogTrigger>Delete Author</AlertDialogTrigger>
@@ -227,12 +233,12 @@ export const AuthorEditForm = ({ author, users }: AuthorEditFormProps) => {
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                     </Button>
                     <Button onClick={() => onDelete()} asChild>
-                      <AlertDialogAction>Continue</AlertDialogAction>
+                      <AlertDialogAction>Delete</AlertDialogAction>
                     </Button>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            </div>
+            )}
           </div>
         </form>
       </Form>

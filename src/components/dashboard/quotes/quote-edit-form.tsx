@@ -1,5 +1,17 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Author, UserRole } from "@prisma/client";
 import { Check, ChevronsUpDown } from "@/components/icons";
 import {
   Command,
@@ -21,10 +33,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { createQuote, updateQuote } from "@/actions/quote";
+import { deleteQuote, updateQuote } from "@/actions/quote";
 import { useState, useTransition } from "react";
 
-import { Author } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { FormError } from "@/components/form-error";
@@ -35,7 +46,9 @@ import { QuoteSchema } from "@/schemas";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useCurrentRole } from "@/hooks/use-current-role";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -48,6 +61,10 @@ export const QuoteEditForm = ({ quote, authors }: QuoteEditFormProps) => {
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const sessionRole = useCurrentRole();
+
+  const showDestructiveActions = sessionRole === UserRole.ADMIN;
 
   const authorOptions = authors.map((author) => {
     return {
@@ -73,6 +90,25 @@ export const QuoteEditForm = ({ quote, authors }: QuoteEditFormProps) => {
 
       try {
         const response = await updateQuote(quote.id, values);
+        setError(response.error);
+        setSuccess(response.success);
+      } catch (error) {
+        setError("Something went wrong");
+      }
+    });
+  };
+
+  const onDelete = async () => {
+    startTransition(async () => {
+      setError("");
+      setSuccess("");
+
+      try {
+        const response = await deleteQuote(quote.id);
+        if (response.success) {
+          router.push("/dashboard/quotes");
+        }
+
         setError(response.error);
         setSuccess(response.success);
       } catch (error) {
@@ -229,11 +265,39 @@ export const QuoteEditForm = ({ quote, authors }: QuoteEditFormProps) => {
 
             <FormError message={error}></FormError>
             <FormSuccess message={success}></FormSuccess>
-            <div className="flex flex-row justify-between">
-              <Button disabled={isPending} type="submit">
-                Edit Quote
-              </Button>
-            </div>
+          </div>
+          <div className="flex flex-row justify-between">
+            <Button disabled={isPending} type="submit">
+              Save Changes
+            </Button>
+
+            {showDestructiveActions && (
+              <AlertDialog>
+                <Button disabled={isPending} variant="outline" asChild>
+                  <AlertDialogTrigger>Delete Quote</AlertDialogTrigger>
+                </Button>
+
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      this quote.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <Button variant="outline" asChild>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    </Button>
+                    <Button onClick={() => onDelete()} asChild>
+                      <AlertDialogAction>Delete</AlertDialogAction>
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </form>
       </Form>

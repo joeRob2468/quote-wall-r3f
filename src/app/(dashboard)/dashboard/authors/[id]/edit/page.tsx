@@ -2,14 +2,12 @@ import { AuthorEditForm } from "@/components/dashboard/authors/author-edit-form"
 import { ErrorWrapper } from "@/components/error-wrapper";
 import { Metadata } from "next";
 import { PageHeading } from "@/components/layout/page-heading";
-import { db } from "@/lib/db";
 import { getAuthorWithUser } from "@/data/author";
 import { getSafeUsers } from "@/data/user";
-import { prismaExclude } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "New Author",
-  description: "Create a new author.",
+  title: "Edit Author",
+  description: "Edit an author.",
 };
 
 export interface EditAuthorPageProps {

@@ -16,7 +16,7 @@ export const primaryNavigation: NavigationItem[] = [
 export const dashboardNavigation: NavigationItem[] = [
   {
     title: "Quotes",
-    href: "#",
+    href: "/dashboard/quotes",
     icon: NotepadText,
   },
   {

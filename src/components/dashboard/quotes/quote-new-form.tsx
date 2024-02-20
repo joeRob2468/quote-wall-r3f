@@ -21,7 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { Author } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -34,18 +34,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { createQuote } from "@/actions/quote";
 import { format } from "date-fns";
+import { getAuthors } from "@/data/author";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-export interface QuoteNewFormProps {
-  authors: Author[];
-}
-
-export const QuoteNewForm = ({ authors }: QuoteNewFormProps) => {
+export const QuoteNewForm = () => {
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
+
+  const [authors, setAuthors] = useState<Author[]>([]);
+  useEffect(() => {
+    let ignore = false;
+    startTransition(async () => {
+      const result = await getAuthors();
+      if (!ignore) {
+        setAuthors(result);
+      }
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const authorOptions = authors.map((author) => {
     return {
@@ -96,7 +108,6 @@ export const QuoteNewForm = ({ authors }: QuoteNewFormProps) => {
                   <Textarea
                     {...field}
                     placeholder="Broke into the wrong goddamn rec room didn't you, you bastard!?"
-                    disabled={isPending}
                   />
                 </FormControl>
                 <FormMessage />
@@ -111,11 +122,7 @@ export const QuoteNewForm = ({ authors }: QuoteNewFormProps) => {
               <FormItem>
                 <FormLabel>Context</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="in the rec room"
-                    disabled={isPending}
-                  />
+                  <Input {...field} placeholder="in the rec room" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,8 +146,9 @@ export const QuoteNewForm = ({ authors }: QuoteNewFormProps) => {
                             "justify-between",
                             !field.value && "text-muted-foreground"
                           )}
+                          disabled={!authorOptions.length}
                         >
-                          {field.value
+                          {field.value && !!authorOptions.length
                             ? authorOptions.find(
                                 (option) => option.value === field.value
                               )?.label

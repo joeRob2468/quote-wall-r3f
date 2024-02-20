@@ -9,13 +9,11 @@ export const metadata: Metadata = {
 };
 
 export default async function NewQuotePage() {
-  const authors = await getAuthors();
-
   return (
     <>
       <PageHeading title="New Quote" description="Create a new quote." />
       <div className="flex flex-col pt-8">
-        <QuoteNewForm authors={authors} />
+        <QuoteNewForm />
       </div>
     </>
   );

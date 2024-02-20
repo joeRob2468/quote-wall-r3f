@@ -34,7 +34,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { deleteQuote, updateQuote } from "@/actions/quote";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -46,6 +46,7 @@ import { QuoteSchema } from "@/schemas";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { getAuthors } from "@/data/author";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -54,15 +55,29 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 export interface QuoteEditFormProps {
   quote: FullQuote;
-  authors: Author[];
 }
 
-export const QuoteEditForm = ({ quote, authors }: QuoteEditFormProps) => {
+export const QuoteEditForm = ({ quote }: QuoteEditFormProps) => {
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const sessionRole = useCurrentRole();
+
+  const [authors, setAuthors] = useState<Author[]>([]);
+  useEffect(() => {
+    let ignore = false;
+    startTransition(async () => {
+      const result = await getAuthors();
+      if (!ignore) {
+        setAuthors(result);
+      }
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const showDestructiveActions = sessionRole === UserRole.ADMIN;
 
@@ -134,7 +149,6 @@ export const QuoteEditForm = ({ quote, authors }: QuoteEditFormProps) => {
                   <Textarea
                     {...field}
                     placeholder="Broke into the wrong goddamn rec room didn't you, you bastard!?"
-                    disabled={isPending}
                   />
                 </FormControl>
                 <FormMessage />
@@ -149,11 +163,7 @@ export const QuoteEditForm = ({ quote, authors }: QuoteEditFormProps) => {
               <FormItem>
                 <FormLabel>Context</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="in the rec room"
-                    disabled={isPending}
-                  />
+                  <Input {...field} placeholder="in the rec room" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -177,8 +187,9 @@ export const QuoteEditForm = ({ quote, authors }: QuoteEditFormProps) => {
                             "justify-between",
                             !field.value && "text-muted-foreground"
                           )}
+                          disabled={!authorOptions.length}
                         >
-                          {field.value
+                          {field.value && !!authorOptions.length
                             ? authorOptions.find(
                                 (option) => option.value === field.value
                               )?.label

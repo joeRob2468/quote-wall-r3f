@@ -35,3 +35,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Temporary private seed folder
+/src/db/seed/*
+!/src/db/seed/seed.ts

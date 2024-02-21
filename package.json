@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "npx prisma db seed"
   },
   "dependencies": {
     "@auth/core": "^0.25.0",
@@ -51,9 +52,11 @@
     "postcss": "^8",
     "prisma": "^5.8.1",
     "tailwindcss": "^3.3.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   },
   "prisma": {
-    "schema": "src/db/schema.prisma"
+    "schema": "src/db/schema.prisma",
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} src/db/seed/seed.ts"
   }
 }

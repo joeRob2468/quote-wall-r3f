@@ -27,6 +27,8 @@ const Layout = ({ children }: LayoutProps) => {
         }}
         eventSource={ref}
         eventPrefix="client"
+        shadows
+        dpr={[1, 1.5]}
       />
     </div>
   );

@@ -36,7 +36,7 @@ export const Playground = () => {
         shadow-mapSize={2048}
       />
       <pointLight
-        position={[-2.85, 4.35, 1.02]}
+        position={[-2.9845, 3.583, 0.732]}
         intensity={4}
         color="#f9e9c1"
         castShadow

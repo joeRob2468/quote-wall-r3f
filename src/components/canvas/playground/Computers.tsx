@@ -49,9 +49,6 @@ type GLTFResult = GLTF & {
     Radio_6: THREE.Mesh
     Radio_7: THREE.Mesh
     Radio_8: THREE.Mesh
-    Reel: THREE.Mesh
-    Reel_1: THREE.Mesh
-    Reel_2: THREE.Mesh
     TapePlayer: THREE.Mesh
     TapePlayer_1: THREE.Mesh
     TapePlayer_2: THREE.Mesh
@@ -73,13 +70,13 @@ type GLTFResult = GLTF & {
     Tuner_Geo_6: THREE.Mesh
     Tuner_Geo_7: THREE.Mesh
     Tuner_Geo_8: THREE.Mesh
-    LargeScreen: THREE.Mesh
-    Screen: THREE.Mesh
-    Screen001: THREE.Mesh
-    Screen002: THREE.Mesh
-    Screen003: THREE.Mesh
-    Screen004: THREE.Mesh
-    Screen005: THREE.Mesh
+    Large_Monitor_Screen: THREE.Mesh
+    Small_Monitor_Screen: THREE.Mesh
+    Small_Monitor_Screen001: THREE.Mesh
+    Small_Monitor_Screen002: THREE.Mesh
+    Small_Monitor_Screen003: THREE.Mesh
+    Small_Monitor_Screen004: THREE.Mesh
+    Small_Monitor_Screen005: THREE.Mesh
     Power: THREE.Mesh
     Frame_1: THREE.Mesh
     Frame_2: THREE.Mesh
@@ -104,12 +101,12 @@ type GLTFResult = GLTF & {
     ['Material.006']: THREE.MeshStandardMaterial
     ['Material.007']: THREE.MeshStandardMaterial
     ['Material.031']: THREE.MeshStandardMaterial
-    REEL: THREE.MeshStandardMaterial
     ['Material.011']: THREE.MeshStandardMaterial
     ['Material.012']: THREE.MeshStandardMaterial
     ['Material.013']: THREE.MeshStandardMaterial
+    REEL: THREE.MeshStandardMaterial
     ['Material.026']: THREE.MeshStandardMaterial
-    SCREEN: THREE.MeshStandardMaterial
+    ['Basic Screen']: THREE.MeshStandardMaterial
     ['Material.032']: THREE.MeshStandardMaterial
     ['Material.008']: THREE.MeshStandardMaterial
     ['Material.002']: THREE.MeshStandardMaterial
@@ -140,23 +137,37 @@ export const Computers = (props: JSX.IntrinsicElements['group']) => {
         <mesh name="Cube012_6_4" castShadow receiveShadow geometry={nodes.Cube012_6_4.geometry} material={materials['Material.008']} />
       </group>
       <group>
+        {/* @ts-expect-error */}
         <instancedMesh args={[nodes.Frame_1.geometry, materials['Material.008'], 5]} name="Frame_1" castShadow receiveShadow instanceMatrix={nodes.Frame_1.instanceMatrix} />
+        {/* @ts-expect-error */}
         <instancedMesh args={[nodes.Frame_2.geometry, materials['Material.002'], 5]} name="Frame_2" castShadow receiveShadow instanceMatrix={nodes.Frame_2.instanceMatrix} />
+        {/* @ts-expect-error */}
         <instancedMesh args={[nodes.Frame_3.geometry, materials['Material.001'], 5]} name="Frame_3" castShadow receiveShadow instanceMatrix={nodes.Frame_3.instanceMatrix} />
+        {/* @ts-expect-error */}
         <instancedMesh args={[nodes.Frame_4.geometry, materials['Material.003'], 5]} name="Frame_4" castShadow receiveShadow instanceMatrix={nodes.Frame_4.instanceMatrix} />
+        {/* @ts-expect-error */}
         <instancedMesh args={[nodes.Frame_5.geometry, materials['Material.010'], 5]} name="Frame_5" castShadow receiveShadow instanceMatrix={nodes.Frame_5.instanceMatrix} />
       </group>
 
-      <mesh name="LargeScreen" castShadow receiveShadow geometry={nodes.LargeScreen.geometry} material={materials.SCREEN} position={[0.548, 7.629, 4.037]} rotation={[-Math.PI / 2, 0, -0.088]} scale={1.743} />
-      <mesh name="Screen" castShadow receiveShadow geometry={nodes.Screen.geometry} material={materials.SCREEN} position={[3.825, 6.424, 3.639]} rotation={[-Math.PI / 2, 0, 0.075]} scale={0.941} />
-      <mesh name="Screen001" castShadow receiveShadow geometry={nodes.Screen001.geometry} material={materials.SCREEN} position={[3.78, 8.651, 3.55]} rotation={[-Math.PI / 2, 0, 0.049]} scale={0.941} />
-      <mesh name="Screen002" castShadow receiveShadow geometry={nodes.Screen002.geometry} material={materials.SCREEN} position={[1.457, 10.514, 3.45]} rotation={[-Math.PI / 2, 0, 0]} scale={0.941} />
-      <mesh name="Screen003" castShadow receiveShadow geometry={nodes.Screen003.geometry} material={materials.SCREEN} position={[6.093, 6.426, 3.334]} rotation={[-Math.PI / 2, 0, 0.186]} scale={0.941} />
-      <mesh name="Screen004" castShadow receiveShadow geometry={nodes.Screen004.geometry} material={materials.SCREEN} position={[-2.654, 6.506, 2.956]} rotation={[-Math.PI / 2, 0, -0.253]} scale={0.941} />
-      {/* <mesh name="Screen005" castShadow receiveShadow geometry={nodes.Screen005.geometry} material={materials.SCREEN} position={[-2.599, 8.709, 2.829]} rotation={[-Math.PI / 2, 0, -0.257]} scale={0.941} /> */}
-      
-      <ScreenText invert panel={nodes.Screen005.geometry} position={[-2.599, 8.709, 2.829]} rotation={[-Math.PI / 2, 0, -0.257]} scale={0.941} />
+      {/* 
+      <mesh name="Large_Monitor_Screen" castShadow receiveShadow geometry={nodes.Large_Monitor_Screen.geometry} material={materials['Basic Screen']} position={[0.678, 7.601, 2.569]} rotation={[-Math.PI / 2, 0, -0.088]} scale={[1.939, 2.001, 2.169]} />
+      <mesh name="Small_Monitor_Screen" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen.geometry} material={materials['Basic Screen']} position={[3.746, 6.591, 2.599]} rotation={[-Math.PI / 2, 0, 0.075]} />
+      <mesh name="Small_Monitor_Screen001" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen001.geometry} material={materials['Basic Screen']} position={[3.722, 8.818, 2.51]} rotation={[-Math.PI / 2, 0, 0.049]} />
+      <mesh name="Small_Monitor_Screen002" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen002.geometry} material={materials['Basic Screen']} position={[1.455, 10.681, 2.422]} rotation={[-Math.PI / 2, 0, 0]} />
+      <mesh name="Small_Monitor_Screen003" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen003.geometry} material={materials['Basic Screen']} position={[5.902, 6.593, 2.304]} rotation={[-Math.PI / 2, 0, 0.186]} />
+      <mesh name="Small_Monitor_Screen004" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen004.geometry} material={materials['Basic Screen']} position={[-2.387, 6.673, 1.923]} rotation={[-Math.PI / 2, 0, -0.253]} />
+      <mesh name="Small_Monitor_Screen005" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen005.geometry} material={materials['Basic Screen']} position={[-2.345, 8.876, 1.829]} rotation={[-Math.PI / 2, 0, -0.257]} />
+      */}
 
+      <ScreenText panel={nodes.Large_Monitor_Screen.geometry} position={[0.678, 7.601, 2.569]} rotation={[-Math.PI / 2, 0, -0.088]} scale={[1.939, 2.001, 2.169]} />
+      <ScreenText invert panel={nodes.Small_Monitor_Screen.geometry} position={[3.746, 6.591, 2.599]} rotation={[-Math.PI / 2, 0, 0.075]}  />
+      <ScreenText panel={nodes.Small_Monitor_Screen001.geometry} position={[3.722, 8.818, 2.51]} rotation={[-Math.PI / 2, 0, 0.049]} />
+      <ScreenText invert panel={nodes.Small_Monitor_Screen002.geometry} position={[1.455, 10.681, 2.422]} rotation={[-Math.PI / 2, 0, 0]} />
+      <ScreenText panel={nodes.Small_Monitor_Screen003.geometry} position={[5.902, 6.593, 2.304]} rotation={[-Math.PI / 2, 0, 0.186]} />
+      <ScreenText invert panel={nodes.Small_Monitor_Screen004.geometry} position={[-2.387, 6.673, 1.923]} rotation={[-Math.PI / 2, 0, -0.253]} />
+      <ScreenText panel={nodes.Small_Monitor_Screen005.geometry} position={[-2.345, 8.876, 1.829]} rotation={[-Math.PI / 2, 0, -0.257]} />
+
+      {/* @ts-expect-error */}
       <instancedMesh args={[nodes.Power.geometry, materials['Material.032'], 6]} name="Power" castShadow receiveShadow instanceMatrix={nodes.Power.instanceMatrix} /> 
     </group>
   )
@@ -187,19 +198,19 @@ type ScreenTextProps = {
 } & ScreenProps;
 
 const ScreenText = ({invert, x=0, y=1.2, ...props}: ScreenTextProps) => {
-  // const textRef = useRef(null!);
-  // const rand = Math.random() * 1000;
+  const textRef = useRef<any>(null!);
+  const rand = Math.random() * 1000;
 
-  // useFrame((state) => {
-  //   textRef.current.position.x = x + Math.sin(rand + state.clock.elapsedTime / 4) * 8;
-  // });
+  useFrame((state) => {
+    textRef.current.position.x = x + Math.sin(rand + state.clock.elapsedTime / 4) * 8;
+  });
   return (
     <Screen {...props}>
       <PerspectiveCamera makeDefault manual aspect={1 / 1} position={[0, 0, 15]} />
       <color attach="background" args={[invert ? 'black' : '#35c19f']} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
-      <Text font="/Inter-Medium.woff" position={[x, y, 0]} /* ref={textRef} */ fontSize={4} letterSpacing={-0.1} color={!invert ? 'black' : '#35c19f'}>
+      <Text font="/IBMPlexMono-Medium.ttf" position={[x, y, 0]} ref={textRef} fontSize={4} letterSpacing={-0.1} color={!invert ? 'black' : '#35c19f'}>
         Poimandres.
       </Text>
     </Screen>

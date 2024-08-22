@@ -180,13 +180,21 @@ type ScreenProps =  {
 const Screen = ({ panel, children, ...props}: ScreenProps) => {
   return (
     <group {...props}>
-      <mesh geometry={panel}>
+      <mesh rotation={[-Math.PI/2, 0, -Math.PI]}>
+        <planeGeometry args={[1.5, 1.5]}/>
         <meshBasicMaterial toneMapped={false}>
           <RenderTexture width={512} height={512} attach="map" anisotropy={16}>
             {children}
           </RenderTexture>
         </meshBasicMaterial>
       </mesh>
+      {/* <mesh geometry={panel}>
+        <meshBasicMaterial toneMapped={false}>
+          <RenderTexture width={512} height={512} attach="map" anisotropy={16}>
+            {children}
+          </RenderTexture>
+        </meshBasicMaterial>
+      </mesh> */}
     </group>
   );
 }
@@ -197,21 +205,21 @@ type ScreenTextProps = {
   y?: number
 } & ScreenProps;
 
-const ScreenText = ({invert, x=0, y=1.2, ...props}: ScreenTextProps) => {
+const ScreenText = ({invert, x=0, y=0, ...props}: ScreenTextProps) => {
   const textRef = useRef<any>(null!);
   const rand = Math.random() * 1000;
 
   useFrame((state) => {
-    textRef.current.position.x = x + Math.sin(rand + state.clock.elapsedTime / 4) * 8;
+    textRef.current.position.x = x + Math.sin(rand + state.clock.elapsedTime / 2) * 12;
   });
   return (
     <Screen {...props}>
       <PerspectiveCamera makeDefault manual aspect={1 / 1} position={[0, 0, 15]} />
-      <color attach="background" args={[invert ? 'black' : '#35c19f']} />
+      <color attach="background" args={[invert ? 'black' : 'red']} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
-      <Text font="/IBMPlexMono-Medium.ttf" position={[x, y, 0]} ref={textRef} fontSize={4} letterSpacing={-0.1} color={!invert ? 'black' : '#35c19f'}>
-        Poimandres.
+      <Text font="/IBMPlexMono-Medium.ttf" position={[x, y, 0]} ref={textRef} fontSize={5} letterSpacing={0} color={!invert ? 'black' : 'red'}>
+        HELP ME PLEASE
       </Text>
     </Screen>
   )

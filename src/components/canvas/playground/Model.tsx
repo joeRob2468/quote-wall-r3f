@@ -121,109 +121,112 @@ export function Model(props: JSX.IntrinsicElements['group']) {
   const { nodes, materials } = useGLTF('/office_scene-transformed.glb') as GLTFResult
   return (
     <group {...props} dispose={null}>
-      <group name="Scene">
-        <mesh name="Desk" castShadow receiveShadow geometry={nodes.Desk.geometry} material={materials.desk_mat} position={[5.966, 3.335, 3.206]} rotation={[-Math.PI, 0.003, -3.141]} scale={0.058} />
-        <mesh name="Desk_No_Drawers" castShadow receiveShadow geometry={nodes.Desk_No_Drawers.geometry} material={materials.desk_mat} position={[-5.969, 3.27, 0.62]} rotation={[0, Math.PI / 2, 0]} scale={0.058} />
-        <group name="LargeFrame" position={[0.548, 7.629, 4.037]} rotation={[-Math.PI / 2, 0, -0.088]} scale={1.743}>
-          <mesh name="LargeFrame_1" castShadow receiveShadow geometry={nodes.LargeFrame_1.geometry} material={materials['Material.001']} />
-          <mesh name="LargeFrame_2" castShadow receiveShadow geometry={nodes.LargeFrame_2.geometry} material={materials['Material.003']} />
-          <mesh name="LargeFrame_3" castShadow receiveShadow geometry={nodes.LargeFrame_3.geometry} material={materials['Material.002']} />
-          <mesh name="LargeFrame_4" castShadow receiveShadow geometry={nodes.LargeFrame_4.geometry} material={materials['Material.010']} />
-          <mesh name="LargeFrame_5" castShadow receiveShadow geometry={nodes.LargeFrame_5.geometry} material={materials['Material.009']} />
-          <mesh name="LargeFrame_6" castShadow receiveShadow geometry={nodes.LargeFrame_6.geometry} material={materials['Material.016']} />
-          <mesh name="LargeFrame_7" castShadow receiveShadow geometry={nodes.LargeFrame_7.geometry} material={materials['Material.030']} />
-        </group>
-        <group name="Frame" position={[3.825, 6.424, 3.639]} rotation={[-Math.PI / 2, 0, 0.075]} scale={0.941}>
-          <mesh name="Cube012_6" castShadow receiveShadow geometry={nodes.Cube012_6.geometry} material={materials['Material.010']} />
-          <mesh name="Cube012_6_1" castShadow receiveShadow geometry={nodes.Cube012_6_1.geometry} material={materials['Material.002']} />
-          <mesh name="Cube012_6_2" castShadow receiveShadow geometry={nodes.Cube012_6_2.geometry} material={materials['Material.001']} />
-          <mesh name="Cube012_6_3" castShadow receiveShadow geometry={nodes.Cube012_6_3.geometry} material={materials['Material.003']} />
-          <mesh name="Cube012_6_4" castShadow receiveShadow geometry={nodes.Cube012_6_4.geometry} material={materials['Material.008']} />
-        </group>
-        <mesh name="Bulb" castShadow receiveShadow geometry={nodes.Bulb.geometry} material={materials['Material.015']} position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.351]} scale={0.9} />
-        <group name="LampModel" position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.351]} scale={0.9}>
-          <mesh name="LampModel_1" castShadow receiveShadow geometry={nodes.LampModel_1.geometry} material={materials['Material.019']} />
-          <mesh name="LampModel_2" castShadow receiveShadow geometry={nodes.LampModel_2.geometry} material={materials['Material.003']} />
-          <mesh name="LampModel_3" castShadow receiveShadow geometry={nodes.LampModel_3.geometry} material={materials['Material.020']} />
-          <mesh name="LampModel_4" castShadow receiveShadow geometry={nodes.LampModel_4.geometry} material={materials['Material.001']} />
-          <mesh name="LampModel_5" castShadow receiveShadow geometry={nodes.LampModel_5.geometry} material={materials['Material.010']} />
-        </group>
-        <group name="Phone001" position={[-5.539, 8.114, 2.515]} rotation={[-Math.PI / 2, 0, 2.769]} scale={[0.222, 0.222, 0.223]}>
-          <mesh name="Phone" castShadow receiveShadow geometry={nodes.Phone.geometry} material={materials['Material.003']} />
-          <mesh name="Phone_1" castShadow receiveShadow geometry={nodes.Phone_1.geometry} material={materials['Material.001']} />
-          <mesh name="Phone_2" castShadow receiveShadow geometry={nodes.Phone_2.geometry} material={materials['Material.008']} />
-          <mesh name="Phone_3" castShadow receiveShadow geometry={nodes.Phone_3.geometry} material={materials['Material.009']} />
-          <mesh name="Phone_4" castShadow receiveShadow geometry={nodes.Phone_4.geometry} material={materials['Material.002']} />
-          <mesh name="Phone_5" castShadow receiveShadow geometry={nodes.Phone_5.geometry} material={materials['Material.010']} />
-        </group>
-        <group name="Radio001" position={[8.226, 5.902, 1.041]} rotation={[-Math.PI / 2, 0, 1.37]} scale={0.75}>
-          <mesh name="Radio" castShadow receiveShadow geometry={nodes.Radio.geometry} material={materials['Material.001']} />
-          <mesh name="Radio_1" castShadow receiveShadow geometry={nodes.Radio_1.geometry} material={materials['Material.003']} />
-          <mesh name="Radio_2" castShadow receiveShadow geometry={nodes.Radio_2.geometry} material={materials['Material.002']} />
-          <mesh name="Radio_3" castShadow receiveShadow geometry={nodes.Radio_3.geometry} material={materials['Material.016']} />
-          <mesh name="Radio_4" castShadow receiveShadow geometry={nodes.Radio_4.geometry} material={materials['Material.005']} />
-          <mesh name="Radio_5" castShadow receiveShadow geometry={nodes.Radio_5.geometry} material={materials['Material.015']} />
-          <mesh name="Radio_6" castShadow receiveShadow geometry={nodes.Radio_6.geometry} material={materials['Material.006']} />
-          <mesh name="Radio_7" castShadow receiveShadow geometry={nodes.Radio_7.geometry} material={materials['Material.007']} />
-          <mesh name="Radio_8" castShadow receiveShadow geometry={nodes.Radio_8.geometry} material={materials['Material.031']} />
-        </group>
-        <group name="Reel001" position={[-0.618, 9.61, 3.999]} scale={[1.373, 1.23, 1.373]}>
-          <mesh name="Reel" castShadow receiveShadow geometry={nodes.Reel.geometry} material={materials.REEL} />
-          <mesh name="Reel_1" castShadow receiveShadow geometry={nodes.Reel_1.geometry} material={materials['Material.002']} />
-          <mesh name="Reel_2" castShadow receiveShadow geometry={nodes.Reel_2.geometry} material={materials['Material.011']} />
-        </group>
-        <group name="TapePlayer001" position={[-5.838, 7.168, -3.687]} rotation={[-Math.PI / 2, 0, -1.591]} scale={1.526}>
-          <mesh name="TapePlayer" castShadow receiveShadow geometry={nodes.TapePlayer.geometry} material={materials['Material.001']} />
-          <mesh name="TapePlayer_1" castShadow receiveShadow geometry={nodes.TapePlayer_1.geometry} material={materials['Material.003']} />
-          <mesh name="TapePlayer_2" castShadow receiveShadow geometry={nodes.TapePlayer_2.geometry} material={materials['Material.002']} />
-          <mesh name="TapePlayer_3" castShadow receiveShadow geometry={nodes.TapePlayer_3.geometry} material={materials['Material.010']} />
-          <mesh name="TapePlayer_4" castShadow receiveShadow geometry={nodes.TapePlayer_4.geometry} material={materials['Material.011']} />
-          <mesh name="TapePlayer_5" castShadow receiveShadow geometry={nodes.TapePlayer_5.geometry} material={materials['Material.012']} />
-          <mesh name="TapePlayer_6" castShadow receiveShadow geometry={nodes.TapePlayer_6.geometry} material={materials['Material.008']} />
-          <mesh name="TapePlayer_7" castShadow receiveShadow geometry={nodes.TapePlayer_7.geometry} material={materials['Material.016']} />
-          <mesh name="TapePlayer_8" castShadow receiveShadow geometry={nodes.TapePlayer_8.geometry} material={materials['Material.009']} />
-          <mesh name="TapePlayer_9" castShadow receiveShadow geometry={nodes.TapePlayer_9.geometry} material={materials['Material.013']} />
-          <mesh name="TapePlayer_10" castShadow receiveShadow geometry={nodes.TapePlayer_10.geometry} material={materials['Material.006']} />
-          <mesh name="TapePlayer_11" castShadow receiveShadow geometry={nodes.TapePlayer_11.geometry} material={materials.REEL} />
-        </group>
-        <group name="Tuner_Model" position={[-6.587, 6.287, 1.208]} rotation={[-Math.PI / 2, 0, -0.734]} scale={0.791}>
-          <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={materials['Material.026']} />
-          <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={materials['Material.001']} />
-          <mesh name="Tuner_Geo_2" castShadow receiveShadow geometry={nodes.Tuner_Geo_2.geometry} material={materials['Material.008']} />
-          <mesh name="Tuner_Geo_3" castShadow receiveShadow geometry={nodes.Tuner_Geo_3.geometry} material={materials['Material.007']} />
-          <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={materials['Material.003']} />
-          <mesh name="Tuner_Geo_5" castShadow receiveShadow geometry={nodes.Tuner_Geo_5.geometry} material={materials['Material.002']} />
-          <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={materials['Material.010']} />
-          <mesh name="Tuner_Geo_7" castShadow receiveShadow geometry={nodes.Tuner_Geo_7.geometry} material={materials['Material.009']} />
-          <mesh name="Tuner_Geo_8" castShadow receiveShadow geometry={nodes.Tuner_Geo_8.geometry} material={materials['Material.016']} />
-        </group>
-        <group name="Tuner_Model_2" position={[-4.713, 6.287, 2.462]} rotation={[-Math.PI / 2, 0, -0.507]} scale={0.791}>
-          <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={materials['Material.026']} />
-          <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={materials['Material.001']} />
-          <mesh name="Tuner_Geo_2" castShadow receiveShadow geometry={nodes.Tuner_Geo_2.geometry} material={materials['Material.008']} />
-          <mesh name="Tuner_Geo_3" castShadow receiveShadow geometry={nodes.Tuner_Geo_3.geometry} material={materials['Material.007']} />
-          <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={materials['Material.003']} />
-          <mesh name="Tuner_Geo_5" castShadow receiveShadow geometry={nodes.Tuner_Geo_5.geometry} material={materials['Material.002']} />
-          <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={materials['Material.010']} />
-          <mesh name="Tuner_Geo_7" castShadow receiveShadow geometry={nodes.Tuner_Geo_7.geometry} material={materials['Material.009']} />
-          <mesh name="Tuner_Geo_8" castShadow receiveShadow geometry={nodes.Tuner_Geo_8.geometry} material={materials['Material.016']} />
-        </group>
-        <mesh name="LargeScreen" castShadow receiveShadow geometry={nodes.LargeScreen.geometry} material={materials.SCREEN} position={[0.548, 7.629, 4.037]} rotation={[-Math.PI / 2, 0, -0.088]} scale={1.743} />
-        <mesh name="Screen" castShadow receiveShadow geometry={nodes.Screen.geometry} material={materials.SCREEN} position={[3.825, 6.424, 3.639]} rotation={[-Math.PI / 2, 0, 0.075]} scale={0.941} />
-        <mesh name="Screen001" castShadow receiveShadow geometry={nodes.Screen001.geometry} material={materials.SCREEN} position={[3.78, 8.651, 3.55]} rotation={[-Math.PI / 2, 0, 0.049]} scale={0.941} />
-        <mesh name="Screen002" castShadow receiveShadow geometry={nodes.Screen002.geometry} material={materials.SCREEN} position={[1.457, 10.514, 3.45]} rotation={[-Math.PI / 2, 0, 0]} scale={0.941} />
-        <mesh name="Screen003" castShadow receiveShadow geometry={nodes.Screen003.geometry} material={materials.SCREEN} position={[6.093, 6.426, 3.334]} rotation={[-Math.PI / 2, 0, 0.186]} scale={0.941} />
-        <mesh name="Screen004" castShadow receiveShadow geometry={nodes.Screen004.geometry} material={materials.SCREEN} position={[-2.654, 6.506, 2.956]} rotation={[-Math.PI / 2, 0, -0.253]} scale={0.941} />
-        <mesh name="Screen005" castShadow receiveShadow geometry={nodes.Screen005.geometry} material={materials.SCREEN} position={[-2.599, 8.709, 2.829]} rotation={[-Math.PI / 2, 0, -0.257]} scale={0.941} />
-        <instancedMesh args={[nodes.Power.geometry, materials['Material.032'], 6]} name="Power" castShadow receiveShadow instanceMatrix={nodes.Power.instanceMatrix} />
-        <group>
-          <instancedMesh args={[nodes.Frame_1.geometry, materials['Material.008'], 5]} name="Frame_1" castShadow receiveShadow instanceMatrix={nodes.Frame_1.instanceMatrix} />
-          <instancedMesh args={[nodes.Frame_2.geometry, materials['Material.002'], 5]} name="Frame_2" castShadow receiveShadow instanceMatrix={nodes.Frame_2.instanceMatrix} />
-          <instancedMesh args={[nodes.Frame_3.geometry, materials['Material.001'], 5]} name="Frame_3" castShadow receiveShadow instanceMatrix={nodes.Frame_3.instanceMatrix} />
-          <instancedMesh args={[nodes.Frame_4.geometry, materials['Material.003'], 5]} name="Frame_4" castShadow receiveShadow instanceMatrix={nodes.Frame_4.instanceMatrix} />
-          <instancedMesh args={[nodes.Frame_5.geometry, materials['Material.010'], 5]} name="Frame_5" castShadow receiveShadow instanceMatrix={nodes.Frame_5.instanceMatrix} />
-        </group>
+      <mesh name="Desk" castShadow receiveShadow geometry={nodes.Desk.geometry} material={materials.desk_mat} position={[5.966, 3.335, 3.206]} rotation={[-Math.PI, 0.003, -3.141]} scale={0.058} />
+      <mesh name="Desk_No_Drawers" castShadow receiveShadow geometry={nodes.Desk_No_Drawers.geometry} material={materials.desk_mat} position={[-5.969, 3.27, 0.62]} rotation={[0, Math.PI / 2, 0]} scale={0.058} />
+      {/* Moved to Computers.tsx
+      <group name="LargeFrame" position={[0.548, 7.629, 4.037]} rotation={[-Math.PI / 2, 0, -0.088]} scale={1.743}>
+        <mesh name="LargeFrame_1" castShadow receiveShadow geometry={nodes.LargeFrame_1.geometry} material={materials['Material.001']} />
+        <mesh name="LargeFrame_2" castShadow receiveShadow geometry={nodes.LargeFrame_2.geometry} material={materials['Material.003']} />
+        <mesh name="LargeFrame_3" castShadow receiveShadow geometry={nodes.LargeFrame_3.geometry} material={materials['Material.002']} />
+        <mesh name="LargeFrame_4" castShadow receiveShadow geometry={nodes.LargeFrame_4.geometry} material={materials['Material.010']} />
+        <mesh name="LargeFrame_5" castShadow receiveShadow geometry={nodes.LargeFrame_5.geometry} material={materials['Material.009']} />
+        <mesh name="LargeFrame_6" castShadow receiveShadow geometry={nodes.LargeFrame_6.geometry} material={materials['Material.016']} />
+        <mesh name="LargeFrame_7" castShadow receiveShadow geometry={nodes.LargeFrame_7.geometry} material={materials['Material.030']} />
       </group>
+      <group name="Frame" position={[3.825, 6.424, 3.639]} rotation={[-Math.PI / 2, 0, 0.075]} scale={0.941}>
+        <mesh name="Cube012_6" castShadow receiveShadow geometry={nodes.Cube012_6.geometry} material={materials['Material.010']} />
+        <mesh name="Cube012_6_1" castShadow receiveShadow geometry={nodes.Cube012_6_1.geometry} material={materials['Material.002']} />
+        <mesh name="Cube012_6_2" castShadow receiveShadow geometry={nodes.Cube012_6_2.geometry} material={materials['Material.001']} />
+        <mesh name="Cube012_6_3" castShadow receiveShadow geometry={nodes.Cube012_6_3.geometry} material={materials['Material.003']} />
+        <mesh name="Cube012_6_4" castShadow receiveShadow geometry={nodes.Cube012_6_4.geometry} material={materials['Material.008']} />
+      </group> 
+      */}
+      <mesh name="Bulb" castShadow receiveShadow geometry={nodes.Bulb.geometry} material={materials['Material.015']} position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.351]} scale={0.9} />
+      <group name="LampModel" position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.351]} scale={0.9}>
+        <mesh name="LampModel_1" castShadow receiveShadow geometry={nodes.LampModel_1.geometry} material={materials['Material.019']} />
+        <mesh name="LampModel_2" castShadow receiveShadow geometry={nodes.LampModel_2.geometry} material={materials['Material.003']} />
+        <mesh name="LampModel_3" castShadow receiveShadow geometry={nodes.LampModel_3.geometry} material={materials['Material.020']} />
+        <mesh name="LampModel_4" castShadow receiveShadow geometry={nodes.LampModel_4.geometry} material={materials['Material.001']} />
+        <mesh name="LampModel_5" castShadow receiveShadow geometry={nodes.LampModel_5.geometry} material={materials['Material.010']} />
+      </group>
+      <group name="Phone001" position={[-5.539, 8.114, 2.515]} rotation={[-Math.PI / 2, 0, 2.769]} scale={[0.222, 0.222, 0.223]}>
+        <mesh name="Phone" castShadow receiveShadow geometry={nodes.Phone.geometry} material={materials['Material.003']} />
+        <mesh name="Phone_1" castShadow receiveShadow geometry={nodes.Phone_1.geometry} material={materials['Material.001']} />
+        <mesh name="Phone_2" castShadow receiveShadow geometry={nodes.Phone_2.geometry} material={materials['Material.008']} />
+        <mesh name="Phone_3" castShadow receiveShadow geometry={nodes.Phone_3.geometry} material={materials['Material.009']} />
+        <mesh name="Phone_4" castShadow receiveShadow geometry={nodes.Phone_4.geometry} material={materials['Material.002']} />
+        <mesh name="Phone_5" castShadow receiveShadow geometry={nodes.Phone_5.geometry} material={materials['Material.010']} />
+      </group>
+      <group name="Radio001" position={[8.226, 5.902, 1.041]} rotation={[-Math.PI / 2, 0, 1.37]} scale={0.75}>
+        <mesh name="Radio" castShadow receiveShadow geometry={nodes.Radio.geometry} material={materials['Material.001']} />
+        <mesh name="Radio_1" castShadow receiveShadow geometry={nodes.Radio_1.geometry} material={materials['Material.003']} />
+        <mesh name="Radio_2" castShadow receiveShadow geometry={nodes.Radio_2.geometry} material={materials['Material.002']} />
+        <mesh name="Radio_3" castShadow receiveShadow geometry={nodes.Radio_3.geometry} material={materials['Material.016']} />
+        <mesh name="Radio_4" castShadow receiveShadow geometry={nodes.Radio_4.geometry} material={materials['Material.005']} />
+        <mesh name="Radio_5" castShadow receiveShadow geometry={nodes.Radio_5.geometry} material={materials['Material.015']} />
+        <mesh name="Radio_6" castShadow receiveShadow geometry={nodes.Radio_6.geometry} material={materials['Material.006']} />
+        <mesh name="Radio_7" castShadow receiveShadow geometry={nodes.Radio_7.geometry} material={materials['Material.007']} />
+        <mesh name="Radio_8" castShadow receiveShadow geometry={nodes.Radio_8.geometry} material={materials['Material.031']} />
+      </group>
+      {/* <group name="Reel001" position={[-0.618, 9.61, 3.999]} scale={[1.373, 1.23, 1.373]}>
+        <mesh name="Reel" castShadow receiveShadow geometry={nodes.Reel.geometry} material={materials.REEL} />
+        <mesh name="Reel_1" castShadow receiveShadow geometry={nodes.Reel_1.geometry} material={materials['Material.002']} />
+        <mesh name="Reel_2" castShadow receiveShadow geometry={nodes.Reel_2.geometry} material={materials['Material.011']} />
+      </group> */}
+      <group name="TapePlayer001" position={[-5.838, 7.168, -3.687]} rotation={[-Math.PI / 2, 0, -1.591]} scale={1.526}>
+        <mesh name="TapePlayer" castShadow receiveShadow geometry={nodes.TapePlayer.geometry} material={materials['Material.001']} />
+        <mesh name="TapePlayer_1" castShadow receiveShadow geometry={nodes.TapePlayer_1.geometry} material={materials['Material.003']} />
+        <mesh name="TapePlayer_2" castShadow receiveShadow geometry={nodes.TapePlayer_2.geometry} material={materials['Material.002']} />
+        <mesh name="TapePlayer_3" castShadow receiveShadow geometry={nodes.TapePlayer_3.geometry} material={materials['Material.010']} />
+        <mesh name="TapePlayer_4" castShadow receiveShadow geometry={nodes.TapePlayer_4.geometry} material={materials['Material.011']} />
+        <mesh name="TapePlayer_5" castShadow receiveShadow geometry={nodes.TapePlayer_5.geometry} material={materials['Material.012']} />
+        <mesh name="TapePlayer_6" castShadow receiveShadow geometry={nodes.TapePlayer_6.geometry} material={materials['Material.008']} />
+        <mesh name="TapePlayer_7" castShadow receiveShadow geometry={nodes.TapePlayer_7.geometry} material={materials['Material.016']} />
+        <mesh name="TapePlayer_8" castShadow receiveShadow geometry={nodes.TapePlayer_8.geometry} material={materials['Material.009']} />
+        <mesh name="TapePlayer_9" castShadow receiveShadow geometry={nodes.TapePlayer_9.geometry} material={materials['Material.013']} />
+        <mesh name="TapePlayer_10" castShadow receiveShadow geometry={nodes.TapePlayer_10.geometry} material={materials['Material.006']} />
+        <mesh name="TapePlayer_11" castShadow receiveShadow geometry={nodes.TapePlayer_11.geometry} material={materials.REEL} />
+      </group>
+      <group name="Tuner_Model" position={[-6.587, 6.287, 1.208]} rotation={[-Math.PI / 2, 0, -0.734]} scale={0.791}>
+        <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={materials['Material.026']} />
+        <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={materials['Material.001']} />
+        <mesh name="Tuner_Geo_2" castShadow receiveShadow geometry={nodes.Tuner_Geo_2.geometry} material={materials['Material.008']} />
+        <mesh name="Tuner_Geo_3" castShadow receiveShadow geometry={nodes.Tuner_Geo_3.geometry} material={materials['Material.007']} />
+        <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={materials['Material.003']} />
+        <mesh name="Tuner_Geo_5" castShadow receiveShadow geometry={nodes.Tuner_Geo_5.geometry} material={materials['Material.002']} />
+        <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={materials['Material.010']} />
+        <mesh name="Tuner_Geo_7" castShadow receiveShadow geometry={nodes.Tuner_Geo_7.geometry} material={materials['Material.009']} />
+        <mesh name="Tuner_Geo_8" castShadow receiveShadow geometry={nodes.Tuner_Geo_8.geometry} material={materials['Material.016']} />
+      </group>
+      <group name="Tuner_Model_2" position={[-4.713, 6.287, 2.462]} rotation={[-Math.PI / 2, 0, -0.507]} scale={0.791}>
+        <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={materials['Material.026']} />
+        <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={materials['Material.001']} />
+        <mesh name="Tuner_Geo_2" castShadow receiveShadow geometry={nodes.Tuner_Geo_2.geometry} material={materials['Material.008']} />
+        <mesh name="Tuner_Geo_3" castShadow receiveShadow geometry={nodes.Tuner_Geo_3.geometry} material={materials['Material.007']} />
+        <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={materials['Material.003']} />
+        <mesh name="Tuner_Geo_5" castShadow receiveShadow geometry={nodes.Tuner_Geo_5.geometry} material={materials['Material.002']} />
+        <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={materials['Material.010']} />
+        <mesh name="Tuner_Geo_7" castShadow receiveShadow geometry={nodes.Tuner_Geo_7.geometry} material={materials['Material.009']} />
+        <mesh name="Tuner_Geo_8" castShadow receiveShadow geometry={nodes.Tuner_Geo_8.geometry} material={materials['Material.016']} />
+      </group>
+
+      {/* Moved to Screens.tsx
+      <mesh name="LargeScreen" castShadow receiveShadow geometry={nodes.LargeScreen.geometry} material={materials.SCREEN} position={[0.548, 7.629, 4.037]} rotation={[-Math.PI / 2, 0, -0.088]} scale={1.743} />
+      <mesh name="Screen" castShadow receiveShadow geometry={nodes.Screen.geometry} material={materials.SCREEN} position={[3.825, 6.424, 3.639]} rotation={[-Math.PI / 2, 0, 0.075]} scale={0.941} />
+      <mesh name="Screen001" castShadow receiveShadow geometry={nodes.Screen001.geometry} material={materials.SCREEN} position={[3.78, 8.651, 3.55]} rotation={[-Math.PI / 2, 0, 0.049]} scale={0.941} />
+      <mesh name="Screen002" castShadow receiveShadow geometry={nodes.Screen002.geometry} material={materials.SCREEN} position={[1.457, 10.514, 3.45]} rotation={[-Math.PI / 2, 0, 0]} scale={0.941} />
+      <mesh name="Screen003" castShadow receiveShadow geometry={nodes.Screen003.geometry} material={materials.SCREEN} position={[6.093, 6.426, 3.334]} rotation={[-Math.PI / 2, 0, 0.186]} scale={0.941} />
+      <mesh name="Screen004" castShadow receiveShadow geometry={nodes.Screen004.geometry} material={materials.SCREEN} position={[-2.654, 6.506, 2.956]} rotation={[-Math.PI / 2, 0, -0.253]} scale={0.941} />
+      <mesh name="Screen005" castShadow receiveShadow geometry={nodes.Screen005.geometry} material={materials.SCREEN} position={[-2.599, 8.709, 2.829]} rotation={[-Math.PI / 2, 0, -0.257]} scale={0.941} />
+      <instancedMesh args={[nodes.Power.geometry, materials['Material.032'], 6]} name="Power" castShadow receiveShadow instanceMatrix={nodes.Power.instanceMatrix} /> 
+      <group>
+        <instancedMesh args={[nodes.Frame_1.geometry, materials['Material.008'], 5]} name="Frame_1" castShadow receiveShadow instanceMatrix={nodes.Frame_1.instanceMatrix} />
+        <instancedMesh args={[nodes.Frame_2.geometry, materials['Material.002'], 5]} name="Frame_2" castShadow receiveShadow instanceMatrix={nodes.Frame_2.instanceMatrix} />
+        <instancedMesh args={[nodes.Frame_3.geometry, materials['Material.001'], 5]} name="Frame_3" castShadow receiveShadow instanceMatrix={nodes.Frame_3.instanceMatrix} />
+        <instancedMesh args={[nodes.Frame_4.geometry, materials['Material.003'], 5]} name="Frame_4" castShadow receiveShadow instanceMatrix={nodes.Frame_4.instanceMatrix} />
+        <instancedMesh args={[nodes.Frame_5.geometry, materials['Material.010'], 5]} name="Frame_5" castShadow receiveShadow instanceMatrix={nodes.Frame_5.instanceMatrix} />
+      </group>
+      */}
     </group>
   )
 }

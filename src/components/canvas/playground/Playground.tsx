@@ -1,6 +1,6 @@
 "use client";
 
-import { BakeShadows, PerspectiveCamera, SpotLight } from "@react-three/drei";
+import { BakeShadows, PerspectiveCamera } from "@react-three/drei";
 import {
   Bloom,
   ChromaticAberration,
@@ -11,6 +11,7 @@ import {
 import { useFrame, useThree } from "@react-three/fiber";
 
 import { BlendFunction } from "postprocessing";
+import { Computers } from "./Computers";
 import { Model } from "./Model";
 import { Three } from "@/components/canvas/Three";
 import { easing } from "maath";
@@ -45,10 +46,16 @@ export const Playground = () => {
       {/* Main Scene */}
       <group position={[-0, -1, 0]}>
         <Model scale={0.5} />
+        <Computers scale={0.5} />
       </group>
 
       {/* Postprocessing */}
       <EffectComposer>
+        <ChromaticAberration
+          blendFunction={BlendFunction.NORMAL}
+          // @ts-expect-error
+          offset={[0.00001, 0.00001]} 
+        />
         <DepthOfField
           target={[
             CAMERA_TARGET_POSITION.x,
@@ -65,10 +72,6 @@ export const Playground = () => {
           luminanceSmoothing={0.9}
           intensity={3}
         />
-        <ChromaticAberration
-          blendFunction={BlendFunction.NORMAL}
-          offset={[0.0005, 0.0005]}
-        />
         <Noise premultiply blendFunction={BlendFunction.ADD} opacity={0.2} />
       </EffectComposer>
       <BakeShadows />
@@ -77,7 +80,7 @@ export const Playground = () => {
   );
 };
 
-function CameraRig({ debug }: { debug?: boolean }) {
+function CameraRig() {
   const { camera } = useThree();
 
   camera.lookAt(
@@ -126,27 +129,12 @@ function CameraRig({ debug }: { debug?: boolean }) {
   });
 
   return (
-    <>
-      <PerspectiveCamera
-        position={[CAMERA_POSITION.x, CAMERA_POSITION.y, CAMERA_POSITION.z]}
-        fov={45}
-        near={1}
-        far={20}
-        makeDefault
-      />
-      {debug && (
-        <mesh
-          position={[
-            CAMERA_TARGET_POSITION.x,
-            CAMERA_TARGET_POSITION.y,
-            CAMERA_TARGET_POSITION.z,
-          ]}
-          scale={0.5}
-        >
-          <sphereGeometry />
-          <meshPhongMaterial color={"#CCCCCC"} />
-        </mesh>
-      )}
-    </>
+    <PerspectiveCamera
+      position={[CAMERA_POSITION.x, CAMERA_POSITION.y, CAMERA_POSITION.z]}
+      fov={45}
+      near={1}
+      far={20}
+      makeDefault
+    />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { BakeShadows, PerspectiveCamera } from "@react-three/drei";
+import { useFrame, useThree } from "@react-three/fiber";
 import {
   Bloom,
   ChromaticAberration,
@@ -8,13 +9,12 @@ import {
   EffectComposer,
   Noise,
 } from "@react-three/postprocessing";
-import { useFrame, useThree } from "@react-three/fiber";
 
+import { Three } from "@/components/canvas/Three";
+import { easing } from "maath";
 import { BlendFunction } from "postprocessing";
 import { Computers } from "./Computers";
 import { Model } from "./Model";
-import { Three } from "@/components/canvas/Three";
-import { easing } from "maath";
 
 const CAMERA_POSITION = { x: 0.5, y: 3, z: -2.6 };
 const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.7 };
@@ -54,7 +54,7 @@ export const Playground = () => {
         <ChromaticAberration
           blendFunction={BlendFunction.NORMAL}
           // @ts-expect-error
-          offset={[0.00001, 0.00001]} 
+          offset={[0.00001, 0.00001]}
         />
         <DepthOfField
           target={[

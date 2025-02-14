@@ -1,13 +1,13 @@
 import "@/styles/globals.css";
 
-import { Metadata } from "next";
-import React from "react";
-import { SessionProvider } from "next-auth/react";
-import { SiteHeader } from "@/components/site-header";
 import { auth } from "@/auth";
-import { cn } from "@/lib/utils";
-import { fontSans } from "@/lib/fonts";
 import { siteConfig } from "@/config/site";
+import { fontSans } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
+import Providers from "@/providers";
+import { Metadata } from "next";
+import { SessionProvider } from "next-auth/react";
+import React from "react";
 
 export const metadata: Metadata = {
   title: {
@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             fontSans.variable
           )}
         >
-          {children}
+          <Providers>{children}</Providers>
         </body>
       </html>
     </SessionProvider>

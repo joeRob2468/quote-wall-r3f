@@ -6,13 +6,12 @@ Files: office_scene.glb [1.53MB] > office_scene-transformed.glb [321.82KB] (79%)
 
 import * as THREE from 'three'
 
-import { PerspectiveCamera, RenderTexture, Text, useGLTF } from '@react-three/drei'
-import React, { ReactNode, useRef } from 'react'
+import { useGLTF } from '@react-three/drei'
 
 import { GLTF } from 'three-stdlib'
-import { useFrame } from '@react-three/fiber'
+import { Screens } from './Screens'
 
-type GLTFResult = GLTF & {
+export type GLTFResult = GLTF & {
   nodes: {
     Desk: THREE.Mesh
     Desk_No_Drawers: THREE.Mesh
@@ -159,69 +158,11 @@ export const Computers = (props: JSX.IntrinsicElements['group']) => {
       <mesh name="Small_Monitor_Screen005" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen005.geometry} material={materials['Basic Screen']} position={[-2.345, 8.876, 1.829]} rotation={[-Math.PI / 2, 0, -0.257]} />
       */}
 
-      <ScreenText panel={nodes.Large_Monitor_Screen.geometry} position={[0.678, 7.601, 2.569]} rotation={[-Math.PI / 2, 0, -0.088]} scale={[1.939, 2.001, 2.169]} />
-      <ScreenText invert panel={nodes.Small_Monitor_Screen.geometry} position={[3.746, 6.591, 2.599]} rotation={[-Math.PI / 2, 0, 0.075]}  />
-      <ScreenText panel={nodes.Small_Monitor_Screen001.geometry} position={[3.722, 8.818, 2.51]} rotation={[-Math.PI / 2, 0, 0.049]} />
-      <ScreenText invert panel={nodes.Small_Monitor_Screen002.geometry} position={[1.455, 10.681, 2.422]} rotation={[-Math.PI / 2, 0, 0]} />
-      <ScreenText panel={nodes.Small_Monitor_Screen003.geometry} position={[5.902, 6.593, 2.304]} rotation={[-Math.PI / 2, 0, 0.186]} />
-      <ScreenText invert panel={nodes.Small_Monitor_Screen004.geometry} position={[-2.387, 6.673, 1.923]} rotation={[-Math.PI / 2, 0, -0.253]} />
-      <ScreenText panel={nodes.Small_Monitor_Screen005.geometry} position={[-2.345, 8.876, 1.829]} rotation={[-Math.PI / 2, 0, -0.257]} />
+      <Screens nodes={nodes} materials={materials} />
 
       {/* @ts-expect-error */}
       <instancedMesh args={[nodes.Power.geometry, materials['Material.032'], 6]} name="Power" castShadow receiveShadow instanceMatrix={nodes.Power.instanceMatrix} /> 
     </group>
-  )
-}
-
-type ScreenProps =  {
-  panel: THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-  children?: ReactNode,
-} & JSX.IntrinsicElements['group']
-const Screen = ({ panel, children, ...props}: ScreenProps) => {
-  return (
-    <group {...props}>
-      <mesh rotation={[-Math.PI/2, 0, -Math.PI]}>
-        <planeGeometry args={[1.5, 1.5]}/>
-        <meshBasicMaterial toneMapped={false}>
-          <RenderTexture width={512} height={512} attach="map" anisotropy={16}>
-            {children}
-          </RenderTexture>
-        </meshBasicMaterial>
-      </mesh>
-      {/* <mesh geometry={panel}>
-        <meshBasicMaterial toneMapped={false}>
-          <RenderTexture width={512} height={512} attach="map" anisotropy={16}>
-            {children}
-          </RenderTexture>
-        </meshBasicMaterial>
-      </mesh> */}
-    </group>
-  );
-}
-
-type ScreenTextProps = {
-  invert?: boolean,
-  x?: number,
-  y?: number
-} & ScreenProps;
-
-const ScreenText = ({invert, x=0, y=0, ...props}: ScreenTextProps) => {
-  const textRef = useRef<any>(null!);
-  const rand = Math.random() * 1000;
-
-  useFrame((state) => {
-    textRef.current.position.x = x + Math.sin(rand + state.clock.elapsedTime / 2) * 12;
-  });
-  return (
-    <Screen {...props}>
-      <PerspectiveCamera makeDefault manual aspect={1 / 1} position={[0, 0, 15]} />
-      <color attach="background" args={[invert ? 'black' : 'red']} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} />
-      <Text font="/IBMPlexMono-Medium.ttf" position={[x, y, 0]} ref={textRef} fontSize={5} letterSpacing={0} color={!invert ? 'black' : 'red'}>
-        HELP ME PLEASE
-      </Text>
-    </Screen>
   )
 }
 

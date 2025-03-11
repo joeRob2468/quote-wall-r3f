@@ -25,6 +25,7 @@
     "@radix-ui/react-toast": "^1.2.1",
     "@react-three/drei": "^9.111.2",
     "@react-three/fiber": "^8.17.5",
+    "@react-three/flex": "^1.0.1",
     "@react-three/postprocessing": "^2.16.2",
     "@tanstack/react-query": "^5.66.0",
     "@tanstack/react-table": "^8.20.1",

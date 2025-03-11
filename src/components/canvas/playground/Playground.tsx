@@ -15,6 +15,7 @@ import { easing } from "maath";
 import { BlendFunction } from "postprocessing";
 import { Computers } from "./Computers";
 import { Model } from "./Model";
+import { Suspense } from "react";
 
 const CAMERA_POSITION = { x: 0.5, y: 3, z: -2.6 };
 const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.7 };
@@ -22,60 +23,62 @@ const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.7 };
 export const Playground = () => {
   return (
     <Three>
-      {/* Lights */}
-      <color attach="background" args={["black"]} />
-      <hemisphereLight intensity={0.1} groundColor="black" />
-      <spotLight
-        decay={0}
-        position={[15, 20, 1]}
-        angle={0.2}
-        penumbra={1}
-        intensity={3}
-        color="#83b7ff"
-        castShadow
-        shadow-mapSize={2048}
-      />
-      <pointLight
-        position={[-2.9845, 3.583, 0.732]}
-        intensity={4}
-        color="#f9e9c1"
-        castShadow
-        shadow-mapSize={2048}
-      />
-
-      {/* Main Scene */}
-      <group position={[-0, -1, 0]}>
-        <Model scale={0.5} />
-        <Computers scale={0.5} />
-      </group>
-
-      {/* Postprocessing */}
-      <EffectComposer>
-        <ChromaticAberration
-          blendFunction={BlendFunction.NORMAL}
-          // @ts-expect-error
-          offset={[0.00001, 0.00001]}
-        />
-        <DepthOfField
-          target={[
-            CAMERA_TARGET_POSITION.x,
-            CAMERA_TARGET_POSITION.y,
-            CAMERA_TARGET_POSITION.z,
-          ]}
-          focalLength={0.15}
-          bokehScale={3}
-          height={700}
-        />
-        <Bloom
-          luminanceThreshold={0}
-          mipmapBlur
-          luminanceSmoothing={0.9}
+      <Suspense fallback={null}>
+        {/* Lights */}
+        <color attach="background" args={["black"]} />
+        <hemisphereLight intensity={0.1} groundColor="black" />
+        <spotLight
+          decay={0}
+          position={[15, 20, 1]}
+          angle={0.2}
+          penumbra={1}
           intensity={3}
+          color="#83b7ff"
+          castShadow
+          shadow-mapSize={2048}
         />
-        <Noise premultiply blendFunction={BlendFunction.ADD} opacity={0.2} />
-      </EffectComposer>
-      <BakeShadows />
-      <CameraRig />
+        <pointLight
+          position={[-2.9845, 3.583, 0.732]}
+          intensity={4}
+          color="#f9e9c1"
+          castShadow
+          shadow-mapSize={2048}
+        />
+
+        {/* Main Scene */}
+        <group position={[-0, -1, 0]}>
+          <Model scale={0.5} />
+          <Computers scale={0.5} />
+        </group>
+
+        {/* Postprocessing */}
+        <EffectComposer>
+          <ChromaticAberration
+            blendFunction={BlendFunction.NORMAL}
+            // @ts-expect-error
+            offset={[0.00001, 0.00001]}
+          />
+          <DepthOfField
+            target={[
+              CAMERA_TARGET_POSITION.x,
+              CAMERA_TARGET_POSITION.y,
+              CAMERA_TARGET_POSITION.z,
+            ]}
+            focalLength={0.15}
+            bokehScale={3}
+            height={700}
+          />
+          <Bloom
+            luminanceThreshold={0}
+            mipmapBlur
+            luminanceSmoothing={0.9}
+            intensity={3}
+          />
+          <Noise premultiply blendFunction={BlendFunction.ADD} opacity={0.2} />
+        </EffectComposer>
+        <BakeShadows />
+        <CameraRig />
+      </Suspense>
     </Three>
   );
 };

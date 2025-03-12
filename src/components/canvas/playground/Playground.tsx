@@ -26,20 +26,20 @@ export const Playground = () => {
       <Suspense fallback={null}>
         {/* Lights */}
         <color attach="background" args={["black"]} />
-        <hemisphereLight intensity={0.1} groundColor="black" />
+        <hemisphereLight intensity={0.5} groundColor="black" />
         <spotLight
           decay={0}
           position={[15, 20, 1]}
           angle={0.2}
           penumbra={1}
-          intensity={3}
+          intensity={8}
           color="#83b7ff"
           castShadow
           shadow-mapSize={2048}
         />
         <pointLight
           position={[-2.9845, 3.583, 0.732]}
-          intensity={4}
+          intensity={6}
           color="#f9e9c1"
           castShadow
           shadow-mapSize={2048}
@@ -56,7 +56,7 @@ export const Playground = () => {
           <ChromaticAberration
             blendFunction={BlendFunction.NORMAL}
             // @ts-expect-error
-            offset={[0.00001, 0.00001]}
+            offset={[0.0001, 0.0001]}
           />
           <DepthOfField
             target={[

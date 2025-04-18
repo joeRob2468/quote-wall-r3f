@@ -2,15 +2,16 @@
 
 import * as THREE from "three";
 
+import { BlendFunction, ChromaticAberrationEffect, CopyPass, EffectComposer, EffectPass, GlitchEffect, GlitchMode, LensDistortionEffect, RenderPass, ScanlineEffect } from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
-import { PerspectiveCamera, RenderTexture } from "@react-three/drei";
-import { ReactNode, Suspense, useState } from "react";
+import { PerspectiveCamera, useFBO } from "@react-three/drei";
+import { ReactNode, Suspense, useMemo, useState } from "react";
+import { createPortal, useFrame, useThree } from "@react-three/fiber";
 
 import { FullQuote } from "@/types/quote";
 import type { GLTFResult } from "./Computers";
 import Text from "./Text";
 import { getQuotes } from "@/data/quote";
-import { useFrame } from "@react-three/fiber";
 import { useQuery } from "@tanstack/react-query";
 
 type ScreensProps = {
@@ -76,7 +77,8 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
 
   return (
     <>
-      <ScreenText
+      {/* Center large screen */}
+      <MainQuoteScreen
         quote={data[quoteIndex]}
         onClick={onClick}
         panel={nodes.Large_Monitor_Screen.geometry}
@@ -84,29 +86,31 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
         rotation={[-Math.PI / 2, 0, -0.088]}
         scale={[1.939, 2.001, 2.169]}
       />
+      {/* Bottom left nav screen */}
       <ScreenText
         quote={data[quoteIndex]}
         onClick={onClick}
-        invert
         panel={nodes.Small_Monitor_Screen.geometry}
         position={[3.746, 6.591, 2.599]}
         rotation={[-Math.PI / 2, 0, 0.075]}
       />
-      <ScreenText
+      {/* Top left small screen */}
+      <DateScreen
         quote={data[quoteIndex]}
         onClick={onClick}
         panel={nodes.Small_Monitor_Screen001.geometry}
         position={[3.722, 8.818, 2.51]}
         rotation={[-Math.PI / 2, 0, 0.049]}
       />
+      {/* Top center small screen */}
       <ScreenText
         quote={data[quoteIndex]}
         onClick={onClick}
-        invert
         panel={nodes.Small_Monitor_Screen002.geometry}
         position={[1.455, 10.681, 2.422]}
         rotation={[-Math.PI / 2, 0, 0]}
       />
+      {/* Far left small screen */}
       <ScreenText
         quote={data[quoteIndex]}
         onClick={onClick}
@@ -114,15 +118,17 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
         position={[5.902, 6.593, 2.304]}
         rotation={[-Math.PI / 2, 0, 0.186]}
       />
+
+      {/* Bottom Right nav screen */}
       <ScreenText
         quote={data[quoteIndex]}
         onClick={onClick}
-        invert
         panel={nodes.Small_Monitor_Screen004.geometry}
         position={[-2.387, 6.673, 1.923]}
         rotation={[-Math.PI / 2, 0, -0.253]}
       />
-      <ScreenText
+      {/* Top right small screen */}
+      <MetaScreen
         quote={data[quoteIndex]}
         onClick={onClick}
         panel={nodes.Small_Monitor_Screen005.geometry}
@@ -133,21 +139,96 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
   );
 };
 
+const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
+  const { gl, camera, scene } = useThree();
+
+  let composer = useMemo(() => {
+    const composer = new EffectComposer(gl);
+    composer.autoRenderToScreen = false;
+
+    const renderPass = new RenderPass(scene, camera);
+    const copyPass = new CopyPass(buffer);
+
+    const scanlineEffectPass = new EffectPass(camera, new ScanlineEffect({
+      blendFunction: BlendFunction.OVERLAY,
+      density: 0.5
+    }));
+
+    const chromaticEffectPass = new EffectPass(camera, new ChromaticAberrationEffect({
+      blendFunction: BlendFunction.NORMAL,
+      offset: new THREE.Vector2(0.01, 0.01),
+      radialModulation: true,
+      modulationOffset: 0.5
+    }));
+
+    const glitchEffect = new GlitchEffect({
+      delay: new THREE.Vector2(0.5, 6.0),
+      duration: new THREE.Vector2(0.1, 0.5),
+      strength: new THREE.Vector2(0.3, .75),
+      ratio: 0.45
+    });
+    glitchEffect.mode = GlitchMode.SPORADIC;
+    const glitchEffectPass = new EffectPass(camera, glitchEffect);
+
+    const lensDistortionEffectPass = new EffectPass(camera, new LensDistortionEffect({
+      distortion: new THREE.Vector2(0.05, 0.05),
+      principalPoint: new THREE.Vector2(0.0, 0.0),
+      focalLength: new THREE.Vector2(0.9, 0.95)
+    }));
+
+    composer.addPass(renderPass);
+    composer.addPass(scanlineEffectPass);
+    composer.addPass(glitchEffectPass);
+    composer.addPass(chromaticEffectPass);
+    composer.addPass(lensDistortionEffectPass);
+    composer.addPass(copyPass);
+
+    return composer;
+  }, [
+    gl,
+    scene,
+    camera,
+    buffer
+  ]);
+
+  useFrame((state) => {
+    gl.setRenderTarget(buffer);
+    if (composer) composer.render();
+    //gl.render(state.scene, state.camera);
+    gl.setRenderTarget(null);
+  });
+
+  return <></>;
+}
+
 type ScreenProps = {
   panel: THREE.BufferGeometry<THREE.NormalBufferAttributes>;
   children?: ReactNode;
 } & JSX.IntrinsicElements["group"];
 
 const Screen = ({ panel, children, ...props }: ScreenProps) => {
+  const [scene] = useState(() => new THREE.Scene());
+  const buffer = useFBO(512, 512);
+
   return (
     <group {...props}>
+      {createPortal((
+        <>
+          <Suspense fallback={null}>
+            <PerspectiveCamera
+              makeDefault
+              manual
+              aspect={1 / 1}
+              position={[0, 0, 16]}
+            />
+            {children}
+            <ScreenRenderer buffer={buffer} />
+          </Suspense>
+        </>
+      ), scene)}
       <mesh rotation={[-Math.PI / 2, 0, -Math.PI]}>
         <planeGeometry args={[1.5, 1.5]} />
-        <meshBasicMaterial toneMapped={false}>
-          <RenderTexture width={512} height={512} attach="map" anisotropy={16}>
-            <Suspense fallback={null}>{children}</Suspense>
-          </RenderTexture>
-        </meshBasicMaterial>
+        <meshBasicMaterial toneMapped={false} map={buffer.texture} />
       </mesh>
     </group>
   );
@@ -171,16 +252,10 @@ type ScreenTextProps = {
 const ScreenText = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
-      <PerspectiveCamera
-        makeDefault
-        manual
-        aspect={1 / 1}
-        position={[0, 0, 16]}
-      />
-      <color attach="background" args={[invert ? "black" : "#6acf65"]} />
+      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
-      <Flex
+      {/* <Flex
         plane="xy"
         size={[13, 13, 0]}
         position={[-13 / 2, 13 / 2, 0]}
@@ -191,7 +266,7 @@ const ScreenText = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
         <Box>
           <Text
             maxWidth={13}
-            color={!invert ? "black" : "#6acf65"}
+            color={!invert ? "#65FFBD" : "#000000"}
             onClick={() => onClick()}
           >
             {quote.body}
@@ -200,11 +275,147 @@ const ScreenText = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
         <Box>
           <Text
             maxWidth={13}
-            color={!invert ? "black" : "#6acf65"}
+            color={!invert ? "#65FFBD" : "#000000"}
             onClick={() => onClick()}
           >
             {quote.author.name}
             {quote.context ? `, ${quote.context}` : ``}
+          </Text>
+        </Box>
+      </Flex> */}
+    </Screen>
+  );
+};
+
+const MainQuoteScreen = ({
+  quote,
+  onClick,
+  invert,
+  ...props
+}: ScreenTextProps) => {
+  return (
+    <Screen {...props}>
+      <PerspectiveCamera
+        makeDefault
+        manual
+        aspect={1 / 1}
+        position={[0, 0, 16]}
+      />
+      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} />
+      <Flex
+        plane="xy"
+        size={[13, 13, 0]}
+        position={[-13 / 2, 13 / 2, 0]}
+        flexDirection="column"
+        align="center"
+        justify="center"
+        wrap="wrap"
+      >
+        <Box>
+          <Text
+            maxWidth={13}
+            color={!invert ? "#65FFBD" : "#000000"}
+            textAlign="center"
+            onClick={() => onClick()}
+          >
+            {quote.body}
+          </Text>
+        </Box>
+      </Flex>
+    </Screen>
+  );
+};
+
+const MetaScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
+  return (
+    <Screen {...props}>
+      <PerspectiveCamera
+        makeDefault
+        manual
+        aspect={1 / 1}
+        position={[0, 0, 16]}
+      />
+      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} />
+      <Flex
+        plane="xy"
+        size={[13, 13, 0]}
+        position={[-13 / 2, 13 / 2, 0]}
+        flexDirection="column"
+        align="center"
+        justify="center"
+        wrap="wrap"
+      >
+        <Box marginBottom={1}>
+          <Text
+            maxWidth={13}
+            color={!invert ? "#65FFBD" : "#000000"}
+            fontSize={2.5}
+            textAlign="center"
+            onClick={() => onClick()}
+          >
+            {quote.author.name}
+          </Text>
+        </Box>
+        <Box>
+          <Text
+            maxWidth={13}
+            color={!invert ? "#65FFBD" : "#000000"}
+            textAlign="center"
+            onClick={() => onClick()}
+          >
+            {quote.context}
+          </Text>
+        </Box>
+      </Flex>
+    </Screen>
+  );
+};
+
+const DateScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
+  return (
+    <Screen {...props}>
+      <PerspectiveCamera
+        makeDefault
+        manual
+        aspect={1 / 1}
+        position={[0, 0, 16]}
+      />
+      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} />
+      <Flex
+        plane="xy"
+        size={[13, 13, 0]}
+        position={[-13 / 2, 13 / 2, 0]}
+        flexDirection="column"
+        align="center"
+        justify="center"
+        wrap="wrap"
+      >
+        <Box>
+          <Text
+            maxWidth={13}
+            color={!invert ? "#65FFBD" : "#000000"}
+            fontSize={1.5}
+            textAlign="center"
+            onClick={() => onClick()}
+          >
+            {`${quote.date.toLocaleString("default", { month: "long" })} ${quote.date.getDay() + 1}`}
+          </Text>
+        </Box>
+        <Box>
+          <Text
+            maxWidth={13}
+            color={!invert ? "#65FFBD" : "#000000"}
+            fontSize={2}
+            textAlign="center"
+            onClick={() => onClick()}
+          >
+            {quote.date.getFullYear()}
           </Text>
         </Box>
       </Flex>

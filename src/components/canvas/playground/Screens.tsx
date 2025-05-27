@@ -26,7 +26,14 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
 
   const [quoteIndex, setQuoteIndex] = useState<number>(0);
 
-  const onClick = () => {
+  const showPreviousQuote = () => {
+    console.log("showPreviousQuote", quoteIndex);
+    setQuoteIndex((prev) =>
+      prev <= 0 ? 0 : prev - 1
+    );
+  };
+  const showNextQuote = () => {
+    console.log("showNextQuote", quoteIndex);
     setQuoteIndex((prev) =>
       prev === (!!data && data.length - 1) ? 0 : prev + 1
     );
@@ -80,16 +87,15 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Center large screen */}
       <MainQuoteScreen
         quote={data[quoteIndex]}
-        onClick={onClick}
         panel={nodes.Large_Monitor_Screen.geometry}
         position={[0.678, 7.601, 2.569]}
         rotation={[-Math.PI / 2, 0, -0.088]}
         scale={[1.939, 2.001, 2.169]}
       />
       {/* Bottom left nav screen */}
-      <ScreenText
-        quote={data[quoteIndex]}
-        onClick={onClick}
+      <NavScreen
+        label="Previous"
+        clickEventHandler={showPreviousQuote}
         panel={nodes.Small_Monitor_Screen.geometry}
         position={[3.746, 6.591, 2.599]}
         rotation={[-Math.PI / 2, 0, 0.075]}
@@ -97,7 +103,6 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Top left small screen */}
       <DateScreen
         quote={data[quoteIndex]}
-        onClick={onClick}
         panel={nodes.Small_Monitor_Screen001.geometry}
         position={[3.722, 8.818, 2.51]}
         rotation={[-Math.PI / 2, 0, 0.049]}
@@ -105,7 +110,6 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Top center small screen */}
       <ScreenText
         quote={data[quoteIndex]}
-        onClick={onClick}
         panel={nodes.Small_Monitor_Screen002.geometry}
         position={[1.455, 10.681, 2.422]}
         rotation={[-Math.PI / 2, 0, 0]}
@@ -113,16 +117,15 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Far left small screen */}
       <ScreenText
         quote={data[quoteIndex]}
-        onClick={onClick}
         panel={nodes.Small_Monitor_Screen003.geometry}
         position={[5.902, 6.593, 2.304]}
         rotation={[-Math.PI / 2, 0, 0.186]}
       />
 
       {/* Bottom Right nav screen */}
-      <ScreenText
-        quote={data[quoteIndex]}
-        onClick={onClick}
+      <NavScreen
+        label="Next"
+        clickEventHandler={showNextQuote}
         panel={nodes.Small_Monitor_Screen004.geometry}
         position={[-2.387, 6.673, 1.923]}
         rotation={[-Math.PI / 2, 0, -0.253]}
@@ -130,7 +133,6 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Top right small screen */}
       <MetaScreen
         quote={data[quoteIndex]}
-        onClick={onClick}
         panel={nodes.Small_Monitor_Screen005.geometry}
         position={[-2.345, 8.876, 1.829]}
         rotation={[-Math.PI / 2, 0, -0.257]}
@@ -245,51 +247,21 @@ const ScreenLoading = ({ ...props }: ScreenProps) => {
 
 type ScreenTextProps = {
   quote: FullQuote;
-  onClick: () => void;
   invert?: boolean;
 } & ScreenProps;
 
-const ScreenText = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
+const ScreenText = ({ quote, invert, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
       <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
-      {/* <Flex
-        plane="xy"
-        size={[13, 13, 0]}
-        position={[-13 / 2, 13 / 2, 0]}
-        flexDirection="column"
-        align="flex-start"
-        wrap="wrap"
-      >
-        <Box>
-          <Text
-            maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
-            onClick={() => onClick()}
-          >
-            {quote.body}
-          </Text>
-        </Box>
-        <Box>
-          <Text
-            maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
-            onClick={() => onClick()}
-          >
-            {quote.author.name}
-            {quote.context ? `, ${quote.context}` : ``}
-          </Text>
-        </Box>
-      </Flex> */}
     </Screen>
   );
 };
 
 const MainQuoteScreen = ({
   quote,
-  onClick,
   invert,
   ...props
 }: ScreenTextProps) => {
@@ -318,7 +290,6 @@ const MainQuoteScreen = ({
             maxWidth={13}
             color={!invert ? "#65FFBD" : "#000000"}
             textAlign="center"
-            onClick={() => onClick()}
           >
             {quote.body}
           </Text>
@@ -328,7 +299,7 @@ const MainQuoteScreen = ({
   );
 };
 
-const MetaScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
+const MetaScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
       <PerspectiveCamera
@@ -355,7 +326,6 @@ const MetaScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
             color={!invert ? "#65FFBD" : "#000000"}
             fontSize={2.5}
             textAlign="center"
-            onClick={() => onClick()}
           >
             {quote.author.name}
           </Text>
@@ -365,7 +335,6 @@ const MetaScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
             maxWidth={13}
             color={!invert ? "#65FFBD" : "#000000"}
             textAlign="center"
-            onClick={() => onClick()}
           >
             {quote.context}
           </Text>
@@ -375,7 +344,7 @@ const MetaScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
   );
 };
 
-const DateScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
+const DateScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
       <PerspectiveCamera
@@ -402,7 +371,6 @@ const DateScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
             color={!invert ? "#65FFBD" : "#000000"}
             fontSize={1.5}
             textAlign="center"
-            onClick={() => onClick()}
           >
             {`${quote.date.toLocaleString("default", { month: "long" })} ${quote.date.getDay() + 1}`}
           </Text>
@@ -413,9 +381,50 @@ const DateScreen = ({ quote, onClick, invert, ...props }: ScreenTextProps) => {
             color={!invert ? "#65FFBD" : "#000000"}
             fontSize={2}
             textAlign="center"
-            onClick={() => onClick()}
           >
             {quote.date.getFullYear()}
+          </Text>
+        </Box>
+      </Flex>
+    </Screen>
+  );
+};
+
+type NavScreenProps = {
+  label: String;
+  clickEventHandler: () => void;
+  invert?: boolean;
+} & ScreenProps;
+
+const NavScreen = ({ label, clickEventHandler, invert, ...props }: NavScreenProps) => {
+  return (
+    <Screen {...props} onClick={() => clickEventHandler()}>
+      <PerspectiveCamera
+        makeDefault
+        manual
+        aspect={1 / 1}
+        position={[0, 0, 16]}
+      />
+      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} />
+      <Flex
+        plane="xy"
+        size={[13, 13, 0]}
+        position={[-13 / 2, 13 / 2, 0]}
+        flexDirection="column"
+        align="center"
+        justify="center"
+        wrap="wrap"
+      >
+        <Box>
+          <Text
+            maxWidth={13}
+            color={!invert ? "#65FFBD" : "#000000"}
+            fontSize={2}
+            textAlign="center"
+          >
+            {label}
           </Text>
         </Box>
       </Flex>

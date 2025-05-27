@@ -8,6 +8,7 @@ import {
   DepthOfField,
   EffectComposer,
   Noise,
+  Pixelation,
 } from "@react-three/postprocessing";
 
 import { Three } from "@/components/canvas/Three";
@@ -16,6 +17,7 @@ import { BlendFunction } from "postprocessing";
 import { Computers } from "./Computers";
 import { Model } from "./Model";
 import { Suspense } from "react";
+import PosterizationEffect from "./shaders/PosterizationEffect";
 
 const CAMERA_POSITION = { x: 0.5, y: 3, z: -2.6 };
 const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.7 };
@@ -68,12 +70,14 @@ export const Playground = () => {
             bokehScale={3}
             height={700}
           />
+          <PosterizationEffect bits={9} />
           <Bloom
             luminanceThreshold={0}
             mipmapBlur
             luminanceSmoothing={0.9}
             intensity={3}
           />
+          <Pixelation granularity={3} />
           <Noise premultiply blendFunction={BlendFunction.ADD} opacity={0.2} />
         </EffectComposer>
         <BakeShadows />

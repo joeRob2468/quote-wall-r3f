@@ -336,7 +336,7 @@ const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
           </Text>
         </Box>
         <Box>
-          <Text maxWidth={13} color={"#65FFBD"} textAlign="center">
+          <Text maxWidth={13} color={"#65FFBD"} fontSize={1.25} textAlign="center">
             {quote.context}
           </Text>
         </Box>

@@ -2,7 +2,18 @@
 
 import * as THREE from "three";
 
-import { BlendFunction, ChromaticAberrationEffect, CopyPass, EffectComposer, EffectPass, GlitchEffect, GlitchMode, LensDistortionEffect, RenderPass, ScanlineEffect } from "postprocessing";
+import {
+  BlendFunction,
+  ChromaticAberrationEffect,
+  CopyPass,
+  EffectComposer,
+  EffectPass,
+  GlitchEffect,
+  GlitchMode,
+  LensDistortionEffect,
+  RenderPass,
+  ScanlineEffect,
+} from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
 import { PerspectiveCamera, useFBO } from "@react-three/drei";
 import { ReactNode, Suspense, useMemo, useState } from "react";
@@ -28,9 +39,7 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
 
   const showPreviousQuote = () => {
     console.log("showPreviousQuote", quoteIndex);
-    setQuoteIndex((prev) =>
-      prev <= 0 ? 0 : prev - 1
-    );
+    setQuoteIndex((prev) => (prev <= 0 ? 0 : prev - 1));
   };
   const showNextQuote = () => {
     console.log("showNextQuote", quoteIndex);
@@ -151,32 +160,41 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
     const renderPass = new RenderPass(scene, camera);
     const copyPass = new CopyPass(buffer);
 
-    const scanlineEffectPass = new EffectPass(camera, new ScanlineEffect({
-      blendFunction: BlendFunction.OVERLAY,
-      density: 0.5
-    }));
+    const scanlineEffectPass = new EffectPass(
+      camera,
+      new ScanlineEffect({
+        blendFunction: BlendFunction.OVERLAY,
+        density: 0.5,
+      })
+    );
 
-    const chromaticEffectPass = new EffectPass(camera, new ChromaticAberrationEffect({
-      blendFunction: BlendFunction.NORMAL,
-      offset: new THREE.Vector2(0.01, 0.01),
-      radialModulation: true,
-      modulationOffset: 0.5
-    }));
+    const chromaticEffectPass = new EffectPass(
+      camera,
+      new ChromaticAberrationEffect({
+        blendFunction: BlendFunction.NORMAL,
+        offset: new THREE.Vector2(0.01, 0.01),
+        radialModulation: true,
+        modulationOffset: 0.5,
+      })
+    );
 
     const glitchEffect = new GlitchEffect({
       delay: new THREE.Vector2(0.5, 6.0),
       duration: new THREE.Vector2(0.1, 0.5),
-      strength: new THREE.Vector2(0.3, .75),
-      ratio: 0.45
+      strength: new THREE.Vector2(0.3, 0.75),
+      ratio: 0.45,
     });
     glitchEffect.mode = GlitchMode.SPORADIC;
     const glitchEffectPass = new EffectPass(camera, glitchEffect);
 
-    const lensDistortionEffectPass = new EffectPass(camera, new LensDistortionEffect({
-      distortion: new THREE.Vector2(0.05, 0.05),
-      principalPoint: new THREE.Vector2(0.0, 0.0),
-      focalLength: new THREE.Vector2(0.9, 0.95)
-    }));
+    const lensDistortionEffectPass = new EffectPass(
+      camera,
+      new LensDistortionEffect({
+        distortion: new THREE.Vector2(0.05, 0.05),
+        principalPoint: new THREE.Vector2(0.0, 0.0),
+        focalLength: new THREE.Vector2(0.9, 0.95),
+      })
+    );
 
     composer.addPass(renderPass);
     composer.addPass(scanlineEffectPass);
@@ -186,12 +204,7 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
     composer.addPass(copyPass);
 
     return composer;
-  }, [
-    gl,
-    scene,
-    camera,
-    buffer
-  ]);
+  }, [gl, scene, camera, buffer]);
 
   useFrame((state) => {
     gl.setRenderTarget(buffer);
@@ -201,7 +214,7 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
   });
 
   return <></>;
-}
+};
 
 type ScreenProps = {
   panel: THREE.BufferGeometry<THREE.NormalBufferAttributes>;
@@ -214,7 +227,7 @@ const Screen = ({ panel, children, ...props }: ScreenProps) => {
 
   return (
     <group {...props}>
-      {createPortal((
+      {createPortal(
         <>
           <Suspense fallback={null}>
             <PerspectiveCamera
@@ -226,8 +239,9 @@ const Screen = ({ panel, children, ...props }: ScreenProps) => {
             {children}
             <ScreenRenderer buffer={buffer} />
           </Suspense>
-        </>
-      ), scene)}
+        </>,
+        scene
+      )}
       <mesh rotation={[-Math.PI / 2, 0, -Math.PI]}>
         <planeGeometry args={[1.5, 1.5]} />
         <meshBasicMaterial toneMapped={false} map={buffer.texture} />
@@ -247,24 +261,19 @@ const ScreenLoading = ({ ...props }: ScreenProps) => {
 
 type ScreenTextProps = {
   quote: FullQuote;
-  invert?: boolean;
 } & ScreenProps;
 
-const ScreenText = ({ quote, invert, ...props }: ScreenTextProps) => {
+const ScreenText = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
-      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
     </Screen>
   );
 };
 
-const MainQuoteScreen = ({
-  quote,
-  invert,
-  ...props
-}: ScreenTextProps) => {
+const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
       <PerspectiveCamera
@@ -273,7 +282,7 @@ const MainQuoteScreen = ({
         aspect={1 / 1}
         position={[0, 0, 16]}
       />
-      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -286,11 +295,7 @@ const MainQuoteScreen = ({
         wrap="wrap"
       >
         <Box>
-          <Text
-            maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
-            textAlign="center"
-          >
+          <Text maxWidth={13} color={"#65FFBD"} textAlign="center">
             {quote.body}
           </Text>
         </Box>
@@ -299,7 +304,7 @@ const MainQuoteScreen = ({
   );
 };
 
-const MetaScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
+const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
       <PerspectiveCamera
@@ -308,7 +313,7 @@ const MetaScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
         aspect={1 / 1}
         position={[0, 0, 16]}
       />
-      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -323,7 +328,7 @@ const MetaScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
         <Box marginBottom={1}>
           <Text
             maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
+            color={"#65FFBD"}
             fontSize={2.5}
             textAlign="center"
           >
@@ -331,11 +336,7 @@ const MetaScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
           </Text>
         </Box>
         <Box>
-          <Text
-            maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
-            textAlign="center"
-          >
+          <Text maxWidth={13} color={"#65FFBD"} textAlign="center">
             {quote.context}
           </Text>
         </Box>
@@ -344,7 +345,7 @@ const MetaScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
   );
 };
 
-const DateScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
+const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
       <PerspectiveCamera
@@ -353,7 +354,7 @@ const DateScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
         aspect={1 / 1}
         position={[0, 0, 16]}
       />
-      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -368,7 +369,7 @@ const DateScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
         <Box>
           <Text
             maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
+            color={"#65FFBD"}
             fontSize={1.5}
             textAlign="center"
           >
@@ -376,12 +377,7 @@ const DateScreen = ({ quote, invert, ...props }: ScreenTextProps) => {
           </Text>
         </Box>
         <Box>
-          <Text
-            maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
-            fontSize={2}
-            textAlign="center"
-          >
+          <Text maxWidth={13} color={"#65FFBD"} fontSize={2} textAlign="center">
             {quote.date.getFullYear()}
           </Text>
         </Box>
@@ -396,16 +392,28 @@ type NavScreenProps = {
   invert?: boolean;
 } & ScreenProps;
 
-const NavScreen = ({ label, clickEventHandler, invert, ...props }: NavScreenProps) => {
+const NavScreen = ({
+  label,
+  clickEventHandler,
+  invert,
+  ...props
+}: NavScreenProps) => {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <Screen {...props} onClick={() => clickEventHandler()}>
+    <Screen
+      {...props}
+      onClick={() => clickEventHandler()}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+    >
       <PerspectiveCamera
         makeDefault
         manual
         aspect={1 / 1}
         position={[0, 0, 16]}
       />
-      <color attach="background" args={[invert ? "#66AE8F" : "#020E09"]} />
+      <color attach="background" args={[hovered ? "#66AE8F" : "#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -420,7 +428,7 @@ const NavScreen = ({ label, clickEventHandler, invert, ...props }: NavScreenProp
         <Box>
           <Text
             maxWidth={13}
-            color={!invert ? "#65FFBD" : "#000000"}
+            color={!hovered ? "#65FFBD" : "#020E09"}
             fontSize={2}
             textAlign="center"
           >

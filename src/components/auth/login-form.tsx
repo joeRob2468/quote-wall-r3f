@@ -12,14 +12,13 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
-import { FormSuccess } from "@/components/form-success";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { LoginSchema } from "@/schemas";
 import { SignInButton } from "@/components/auth/auth-buttons";
-import { login } from "@/actions/login";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -31,7 +30,7 @@ export const LoginForm = () => {
       ? "Email is already in use with a different provider."
       : "";
 
-  const [success, setSuccess] = useState<string | undefined>("");
+  const router = useRouter();
   const [error, setError] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
 
@@ -46,12 +45,21 @@ export const LoginForm = () => {
   const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
     startTransition(async () => {
       setError("");
-      setSuccess("");
 
-      const response = await login(values, callbackUrl);
-      form.reset();
-      setError(response.error);
-      setSuccess(response.success);
+      const result = await signIn("credentials", {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        form.reset();
+        setError("Invalid credentials");
+        return;
+      }
+
+      router.refresh();
+      router.push(callbackUrl || "/");
     });
   };
 
@@ -93,7 +101,6 @@ export const LoginForm = () => {
 
           <div className="mt-4">
             <FormError message={error || urlError} />
-            <FormSuccess message={success} />
 
             <Button type="submit" className="w-full" disabled={isPending}>
               Sign In

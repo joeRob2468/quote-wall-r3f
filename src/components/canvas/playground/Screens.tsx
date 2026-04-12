@@ -502,7 +502,7 @@ const QuoteListScreen = ({
 
   // UV (v=1 = physical top = portal y +6.5, u=0 = physical right = portal x +6.5)
   const uvToRowIndex = (uv: THREE.Vector2): number | null => {
-    const portalX = (0.5 - uv.x) * 13;
+    const portalX = (uv.x - 0.5) * 13;
     // Ignore clicks on the scrollbar column
     if (portalX > SCROLLBAR_X - SCROLLBAR_W) return null;
     const portalY = (uv.y - 0.5) * 13;
@@ -512,7 +512,7 @@ const QuoteListScreen = ({
   };
 
   const isOnScrollbar = (uv: THREE.Vector2) =>
-    (0.5 - uv.x) * 13 > SCROLLBAR_X - SCROLLBAR_W;
+    (uv.x - 0.5) * 13 > SCROLLBAR_X - SCROLLBAR_W;
 
   return (
     <Screen

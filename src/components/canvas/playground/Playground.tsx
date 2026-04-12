@@ -77,7 +77,7 @@ export const Playground = () => {
             luminanceSmoothing={0.9}
             intensity={3}
           />
-          <Pixelation granularity={2} />
+          <AdaptivePixelation baseGranularity={2} referenceWidth={1920} />
           <Noise premultiply blendFunction={BlendFunction.ADD} opacity={0.2} />
         </EffectComposer>
         <BakeShadows />
@@ -86,6 +86,18 @@ export const Playground = () => {
     </Three>
   );
 };
+
+function AdaptivePixelation({
+  baseGranularity,
+  referenceWidth,
+}: {
+  baseGranularity: number;
+  referenceWidth: number;
+}) {
+  const { size } = useThree();
+  const granularity = Math.max(1, Math.round(baseGranularity * (size.width / referenceWidth)));
+  return <Pixelation granularity={granularity} />;
+}
 
 function CameraRig() {
   const { camera } = useThree();

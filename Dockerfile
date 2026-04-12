@@ -1,4 +1,6 @@
 FROM node:20-alpine AS base
+# Fix for Prisma: Install OpenSSL for Alpine Linux
+RUN apk add --no-cache openssl
 
 # ---- Install dependencies ----
 FROM base AS deps
@@ -28,12 +30,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Prisma schema + binaries (needed for `prisma migrate deploy` at startup)
-# FIXED: Copy the custom src/db folder instead of the default prisma folder
-COPY --from=builder /app/src/db ./src/db
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Prisma schema + binaries
+# FIXED: Added --chown=nextjs:nodejs so Prisma has write access to its own engine files
+COPY --from=builder --chown=nextjs:nodejs /app/src/db ./src/db
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 USER nextjs
 EXPOSE 3000

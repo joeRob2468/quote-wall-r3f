@@ -179,7 +179,7 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
     );
 
     const glitchEffect = new GlitchEffect({
-      delay: new THREE.Vector2(0.5, 6.0),
+      delay: new THREE.Vector2(1.0, 10.0),
       duration: new THREE.Vector2(0.1, 0.5),
       strength: new THREE.Vector2(0.3, 0.75),
       ratio: 0.45,

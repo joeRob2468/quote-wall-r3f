@@ -53,7 +53,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 On first run, optionally seed the database:
 
 ```bash
-docker exec quote_wall_app node node_modules/.bin/prisma db seed
+docker exec quote_wall_app npx -y tsx src/db/seed/seed.ts
 ```
 
 Database migrations run automatically on each container startup.

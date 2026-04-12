@@ -41,5 +41,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run migrations then start the server
-# FIXED: Use npx and explicitly pass the --schema flag so Prisma knows where the schema lives
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=src/db/schema.prisma && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema=src/db/schema.prisma && node server.js"]

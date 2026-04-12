@@ -1,7 +1,6 @@
 "use client";
 
 import { BakeShadows, PerspectiveCamera } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
 import {
   Bloom,
   ChromaticAberration,
@@ -10,14 +9,15 @@ import {
   Noise,
   Pixelation,
 } from "@react-three/postprocessing";
+import { useFrame, useThree } from "@react-three/fiber";
 
-import { Three } from "@/components/canvas/Three";
-import { easing } from "maath";
 import { BlendFunction } from "postprocessing";
 import { Computers } from "./Computers";
 import { Model } from "./Model";
-import { Suspense } from "react";
 import PosterizationEffect from "./shaders/PosterizationEffect";
+import { Suspense } from "react";
+import { Three } from "@/components/canvas/Three";
+import { easing } from "maath";
 
 const CAMERA_POSITION = { x: 0.5, y: 3, z: -2.6 };
 const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.7 };
@@ -77,7 +77,7 @@ export const Playground = () => {
             luminanceSmoothing={0.9}
             intensity={3}
           />
-          <Pixelation granularity={3} />
+          <Pixelation granularity={2} />
           <Noise premultiply blendFunction={BlendFunction.ADD} opacity={0.2} />
         </EffectComposer>
         <BakeShadows />

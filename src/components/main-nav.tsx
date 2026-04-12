@@ -38,7 +38,7 @@ export function MainNav({ items }: MainNavProps) {
                   key={index}
                   href={item.href}
                   className={cn(
-                    "flex items-center text-sm font-medium text-muted-foreground hover:text-foreground",
+                    "flex items-center text-sm font-medium text-muted-foreground hover:text-foreground pointer-events-auto",
                     item.disabled && "cursor-not-allowed opacity-80",
                     checkActivePath(item.href) && "text-foreground"
                   )}

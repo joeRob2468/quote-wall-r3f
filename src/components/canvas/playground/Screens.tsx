@@ -15,8 +15,8 @@ import {
   ScanlineEffect,
 } from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
-import { PerspectiveCamera, useFBO } from "@react-three/drei";
-import { ReactNode, Suspense, useMemo, useState } from "react";
+import { Text as DreiText, PerspectiveCamera, useFBO } from "@react-three/drei";
+import { ReactNode, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal, useFrame, useThree } from "@react-three/fiber";
 
 import { FullQuote } from "@/types/quote";
@@ -46,6 +46,14 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
     setQuoteIndex((prev) =>
       prev === (!!data && data.length - 1) ? 0 : prev + 1
     );
+  };
+  const showRandomQuote = () => {
+    if (!data || data.length <= 1) return;
+    let next: number;
+    do {
+      next = Math.floor(Math.random() * data.length);
+    } while (next === quoteIndex);
+    setQuoteIndex(next);
   };
 
   if (isPending || isError) {
@@ -116,16 +124,19 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
         position={[3.722, 8.818, 2.51]}
         rotation={[-Math.PI / 2, 0, 0.049]}
       />
-      {/* Top center small screen */}
-      <ScreenText
-        quote={data[quoteIndex]}
+      {/* Top center small screen — random nav */}
+      <NavScreen
+        label="✨Random"
+        clickEventHandler={showRandomQuote}
         panel={nodes.Small_Monitor_Screen002.geometry}
         position={[1.455, 10.681, 2.422]}
         rotation={[-Math.PI / 2, 0, 0]}
       />
-      {/* Far left small screen */}
-      <ScreenText
-        quote={data[quoteIndex]}
+      {/* Far left small screen — quote list */}
+      <QuoteListScreen
+        quotes={data}
+        quoteIndex={quoteIndex}
+        setQuoteIndex={setQuoteIndex}
         panel={nodes.Small_Monitor_Screen003.geometry}
         position={[5.902, 6.593, 2.304]}
         rotation={[-Math.PI / 2, 0, 0.186]}
@@ -263,15 +274,6 @@ type ScreenTextProps = {
   quote: FullQuote;
 } & ScreenProps;
 
-const ScreenText = ({ quote, ...props }: ScreenTextProps) => {
-  return (
-    <Screen {...props}>
-      <color attach="background" args={["#020E09"]} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} />
-    </Screen>
-  );
-};
 
 const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
@@ -382,6 +384,227 @@ const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
           </Text>
         </Box>
       </Flex>
+    </Screen>
+  );
+};
+
+const LIST_ROW_HEIGHT = 3;
+const LIST_WIDTH = 11.2;
+const LIST_VISIBLE_HEIGHT = 13;
+const SCROLLBAR_X = 5.9;
+const SCROLLBAR_W = 0.5;
+
+type QuoteRowProps = {
+  quote: FullQuote;
+  isActive: boolean;
+  isHovered: boolean;
+  y: number;
+};
+
+const QuoteRow = ({ quote, isActive, isHovered, y }: QuoteRowProps) => {
+  const bgColor = isActive ? "#0A3020" : isHovered ? "#0A3020" : "#020E09";
+  const textColor = "#65FFBD";
+  const truncated =
+    quote.body.length > 48 ? quote.body.substring(0, 45) + "..." : quote.body;
+
+  return (
+    <group position={[-6.5, y, 0]}>
+      <mesh position={[LIST_WIDTH / 2, -(LIST_ROW_HEIGHT - 0.1) / 2, 0]}>
+        <planeGeometry args={[LIST_WIDTH, LIST_ROW_HEIGHT - 0.1]} />
+        <meshBasicMaterial color={bgColor} />
+      </mesh>
+      <DreiText
+        maxWidth={LIST_WIDTH - 0.6}
+        color={textColor}
+        fontSize={0.85}
+        font="/IBMPlexMono-Medium.ttf"
+        anchorX="left"
+        anchorY="top"
+        textAlign="left"
+        position={[0.3, -0.35, 0.01]}
+      >
+        {quote.author.name}
+      </DreiText>
+      <DreiText
+        maxWidth={LIST_WIDTH - 0.6}
+        color={textColor}
+        fontSize={0.6}
+        font="/IBMPlexMono-Medium.ttf"
+        anchorX="left"
+        anchorY="top"
+        textAlign="left"
+        position={[0.3, -1.3, 0.01]}
+      >
+        {truncated}
+      </DreiText>
+    </group>
+  );
+};
+
+type QuoteListScreenProps = {
+  quotes: FullQuote[];
+  quoteIndex: number;
+  setQuoteIndex: (index: number) => void;
+} & ScreenProps;
+
+const QuoteListScreen = ({
+  quotes,
+  quoteIndex,
+  setQuoteIndex,
+  ...props
+}: QuoteListScreenProps) => {
+  const scrollOffset = useRef(0);
+  const scrollGroupRef = useRef<THREE.Group>(null);
+  const thumbRef = useRef<THREE.Mesh>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const isDragging = useRef<"list" | "scrollbar" | null>(null);
+  const dragStartV = useRef(0);
+  const dragStartScroll = useRef(0);
+  const dragScrollbarGrabOffset = useRef(0);
+  const hasDragged = useRef(false);
+
+  const totalHeight = quotes.length * LIST_ROW_HEIGHT;
+  const maxScroll = Math.max(0, totalHeight - LIST_VISIBLE_HEIGHT);
+  const thumbHeight = Math.max(
+    1.5,
+    (LIST_VISIBLE_HEIGHT / totalHeight) * LIST_VISIBLE_HEIGHT
+  );
+  const thumbTravel = LIST_VISIBLE_HEIGHT - thumbHeight;
+
+  // Scroll so the active quote is visible whenever quoteIndex changes
+  useEffect(() => {
+    const i = quoteIndex;
+    const rowTopY = 6.0 - i * LIST_ROW_HEIGHT + scrollOffset.current;
+    const rowBottomY = 6.0 - (i + 1) * LIST_ROW_HEIGHT + scrollOffset.current;
+
+    let target = scrollOffset.current;
+    if (rowTopY > 6.2) {
+      // Row is above the viewport — snap so it appears at the top
+      target = i * LIST_ROW_HEIGHT;
+    } else if (rowBottomY < -6.2) {
+      // Row is below the viewport — snap so it appears at the bottom
+      target = (i + 1) * LIST_ROW_HEIGHT - 12.2;
+    }
+
+    scrollOffset.current = Math.max(0, Math.min(maxScroll, target));
+  }, [quoteIndex, maxScroll]);
+
+  useFrame(() => {
+    if (scrollGroupRef.current) {
+      scrollGroupRef.current.position.y = scrollOffset.current;
+    }
+    if (thumbRef.current && maxScroll > 0) {
+      const ratio = scrollOffset.current / maxScroll;
+      thumbRef.current.position.y =
+        6.5 - thumbHeight / 2 - ratio * thumbTravel;
+    }
+  });
+
+  // UV (v=1 = physical top = portal y +6.5, u=0 = physical right = portal x +6.5)
+  const uvToRowIndex = (uv: THREE.Vector2): number | null => {
+    const portalX = (0.5 - uv.x) * 13;
+    // Ignore clicks on the scrollbar column
+    if (portalX > SCROLLBAR_X - SCROLLBAR_W) return null;
+    const portalY = (uv.y - 0.5) * 13;
+    const contentY = portalY - scrollOffset.current;
+    const i = Math.floor((6.0 - contentY) / LIST_ROW_HEIGHT);
+    return i >= 0 && i < quotes.length ? i : null;
+  };
+
+  const isOnScrollbar = (uv: THREE.Vector2) =>
+    (0.5 - uv.x) * 13 > SCROLLBAR_X - SCROLLBAR_W;
+
+  return (
+    <Screen
+      {...props}
+      onPointerDown={(e) => {
+        if (!e.uv) return;
+        hasDragged.current = false;
+        if (isOnScrollbar(e.uv)) {
+          isDragging.current = "scrollbar";
+          const portalY = (e.uv.y - 0.5) * 13;
+          const currentThumbY =
+            maxScroll > 0
+              ? 6.5 - thumbHeight / 2 - (scrollOffset.current / maxScroll) * thumbTravel
+              : 6.5 - thumbHeight / 2;
+          dragScrollbarGrabOffset.current = portalY - currentThumbY;
+        } else {
+          isDragging.current = "list";
+          dragStartV.current = e.uv.y;
+          dragStartScroll.current = scrollOffset.current;
+        }
+      }}
+      onPointerMove={(e) => {
+        if (!e.uv) return;
+        if (isDragging.current === "list") {
+          hasDragged.current = true;
+          const target =
+            dragStartScroll.current + (e.uv.y - dragStartV.current) * 13 * 3;
+          scrollOffset.current = Math.max(0, Math.min(maxScroll, target));
+        } else if (isDragging.current === "scrollbar" && maxScroll > 0) {
+          hasDragged.current = true;
+          const portalY = (e.uv.y - 0.5) * 13;
+          const thumbCenter = portalY - dragScrollbarGrabOffset.current;
+          const ratio = (6.5 - thumbHeight / 2 - thumbCenter) / thumbTravel;
+          scrollOffset.current = Math.max(
+            0,
+            Math.min(maxScroll, ratio * maxScroll)
+          );
+        } else {
+          setHoveredIndex(uvToRowIndex(e.uv));
+        }
+      }}
+      onPointerUp={() => {
+        isDragging.current = null;
+      }}
+      onPointerLeave={() => {
+        isDragging.current = null;
+        setHoveredIndex(null);
+      }}
+      onClick={(e) => {
+        if (!e.uv || hasDragged.current) return;
+        const idx = uvToRowIndex(e.uv);
+        if (idx !== null) setQuoteIndex(idx);
+      }}
+      onWheel={(e) => {
+        scrollOffset.current = Math.max(
+          0,
+          Math.min(maxScroll, scrollOffset.current + e.deltaY * 0.02)
+        );
+      }}
+    >
+      {/* Tighter FOV so items outside the 13×13 area are naturally clipped */}
+      <PerspectiveCamera makeDefault manual aspect={1 / 1} fov={44} position={[0, 0, 16]} />
+      <color attach="background" args={["#020E09"]} />
+      <ambientLight intensity={0.5} />
+
+      {/* Scrollbar track */}
+      <mesh position={[SCROLLBAR_X, 0, 0]}>
+        <planeGeometry args={[SCROLLBAR_W, LIST_VISIBLE_HEIGHT]} />
+        <meshBasicMaterial color="#0A2A1A" />
+      </mesh>
+
+      {/* Scrollbar thumb */}
+      <mesh
+        ref={thumbRef}
+        position={[SCROLLBAR_X, 6.5 - thumbHeight / 2, 0.01]}
+      >
+        <planeGeometry args={[SCROLLBAR_W, thumbHeight]} />
+        <meshBasicMaterial color="#65FFBD" />
+      </mesh>
+
+      {/* Scrollable rows */}
+      <group ref={scrollGroupRef}>
+        {quotes.map((quote, i) => (
+          <QuoteRow
+            key={quote.id}
+            quote={quote}
+            isActive={i === quoteIndex}
+            isHovered={i === hoveredIndex}
+            y={6.0 - i * LIST_ROW_HEIGHT}
+          />
+        ))}
+      </group>
     </Screen>
   );
 };

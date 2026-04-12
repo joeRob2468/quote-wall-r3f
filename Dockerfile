@@ -29,7 +29,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Prisma schema + binaries (needed for `prisma migrate deploy` at startup)
-COPY --from=builder /app/prisma ./prisma
+# FIXED: Copy the custom src/db folder instead of the default prisma folder
+COPY --from=builder /app/src/db ./src/db
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
@@ -40,4 +41,5 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run migrations then start the server
-CMD ["sh", "-c", "node node_modules/.bin/prisma migrate deploy && node server.js"]
+# FIXED: Use npx and explicitly pass the --schema flag so Prisma knows where the schema lives
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=src/db/schema.prisma && node server.js"]

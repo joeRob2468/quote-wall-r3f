@@ -89,7 +89,7 @@ export const authConfig = {
     }: {
       session: Session;
       token?: JWT;
-      trigger: string;
+      trigger?: string;
     }) {
       if (!token) return session; // fix typescript errors, token will always be defined
 
@@ -139,4 +139,4 @@ export const authConfig = {
   secret: process.env.NEXTAUTH_SECRET,
 } satisfies NextAuthConfig;
 
-export const { handlers, auth, signIn, signOut, update } = NextAuth(authConfig);
+export const { handlers, auth, signIn, signOut, unstable_update: update } = NextAuth(authConfig);

@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Quote Wall
 
-## Getting Started
+## Development
 
-First, run the development server:
+Start the database, then run the dev server:
 
 ```bash
+docker compose up -d
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To seed the database with initial data:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```bash
+npm run seed
+```
 
-## Learn More
+## Production (Docker + Cloudflare Tunnel)
 
-To learn more about Next.js, take a look at the following resources:
+### First-time setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**1. Set up your Cloudflare tunnel**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Go to Cloudflare Zero Trust → Networks → Tunnels, create a tunnel, and point a public hostname to `http://app:3000`. Copy the tunnel token.
 
-## Deploy on Vercel
+**2. Create your env file**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cp .env.prod.example .env.prod
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Fill in all values — secrets, OAuth credentials, your tunnel domain, and the tunnel token. Generate `NEXTAUTH_SECRET` with:
+
+```bash
+openssl rand -base64 32
+```
+
+**3. Update OAuth callback URLs**
+
+In your GitHub and Google OAuth app settings, add your tunnel domain as an allowed callback URL:
+- `https://your-domain.com/api/auth/callback/github`
+- `https://your-domain.com/api/auth/callback/google`
+
+**4. Build and start**
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+On first run, optionally seed the database:
+
+```bash
+docker exec quote_wall_app node node_modules/.bin/prisma db seed
+```
+
+Database migrations run automatically on each container startup.
+
+### Subsequent deploys
+
+```bash
+git pull
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```

@@ -8,6 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import { LoginSchema } from "@/schemas";
 import { SignInButton } from "@/components/auth/auth-buttons";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -119,7 +119,7 @@ export const LoginForm = () => {
       </div>
 
       <div className="mt-6 flex flex-row gap-3 items-center justify-center">
-        <SignInButton provider="google" />
+        {/* <SignInButton provider="google" /> */}
         <SignInButton provider="github" />
       </div>
 

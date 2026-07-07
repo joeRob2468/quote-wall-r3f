@@ -95,6 +95,8 @@ export const Playground = () => {
   );
 };
 
+const MAX_PIXELATION_GRANULARITY_MULTIPLIER = 1;
+
 function AdaptivePixelation({
   baseGranularity,
   referenceWidth,
@@ -103,7 +105,9 @@ function AdaptivePixelation({
   referenceWidth: number;
 }) {
   const { size } = useThree();
-  const granularity = Math.max(1, Math.round(baseGranularity * (size.width / referenceWidth)));
+  const scaled = baseGranularity * (size.width / referenceWidth);
+  const capped = Math.min(scaled, baseGranularity * MAX_PIXELATION_GRANULARITY_MULTIPLIER);
+  const granularity = Math.max(1, Math.round(capped));
   return <Pixelation granularity={granularity} />;
 }
 

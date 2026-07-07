@@ -28,7 +28,9 @@ export const LoginForm = () => {
   const urlError =
     searchParams.get("error") === "OAuthAccountNotLinked"
       ? "Email is already in use with a different provider."
-      : "";
+      : searchParams.get("error") === "AccessDenied"
+        ? "Your account is pending admin approval."
+        : "";
 
   const router = useRouter();
   const [error, setError] = useState<string | undefined>("");
@@ -54,7 +56,11 @@ export const LoginForm = () => {
 
       if (result?.error) {
         form.reset();
-        setError("Invalid credentials");
+        setError(
+          result.error === "AccessDenied"
+            ? "Your account is pending admin approval."
+            : "Invalid credentials"
+        );
         return;
       }
 

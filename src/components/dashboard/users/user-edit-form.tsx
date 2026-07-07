@@ -158,6 +158,9 @@ export const UserEditForm = ({ user }: UserEditFormProps) => {
                         Administrator
                       </SelectItem>
                       <SelectItem value={UserRole.USER}>User</SelectItem>
+                      <SelectItem value={UserRole.PENDING}>
+                        Pending Approval
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

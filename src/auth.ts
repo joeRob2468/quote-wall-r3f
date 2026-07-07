@@ -61,6 +61,28 @@ export const authConfig = {
   },
   callbacks: {
     async signIn({ user, account, profile, email, credentials }) {
+      if (!user.id) return false;
+
+      const existingUser = await getUserById(user.id);
+      if (!existingUser) return false;
+
+      if (existingUser.role === UserRole.PENDING) {
+        // Bootstrap: if no admin exists yet, this user becomes the admin
+        const adminCount = await db.user.count({
+          where: { role: UserRole.ADMIN },
+        });
+
+        if (adminCount === 0) {
+          await db.user.update({
+            where: { id: existingUser.id },
+            data: { role: UserRole.ADMIN },
+          });
+        } else {
+          // Block sign in until an admin approves the account
+          return false;
+        }
+      }
+
       // Allow OAuth without email verification
       if (account?.provider !== "credentials") return true;
 

@@ -27,9 +27,18 @@ export const columns: ColumnDef<SafeUser>[] = [
   {
     accessorKey: "role",
     header: "Role",
-    cell: ({ row }) => (
-      <>{row.getValue("role") === UserRole.ADMIN ? "Administrator" : "User"}</>
-    ),
+    cell: ({ row }) => {
+      const role = row.getValue("role");
+      return (
+        <>
+          {role === UserRole.ADMIN
+            ? "Administrator"
+            : role === UserRole.PENDING
+              ? "Pending Approval"
+              : "User"}
+        </>
+      );
+    },
   },
   {
     id: "actions",

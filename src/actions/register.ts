@@ -32,5 +32,7 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
 
   // TODO: verification email
 
-  return { success: "Account created successfully." };
+  return {
+    success: "Account created. An admin needs to approve it before you can sign in.",
+  };
 };

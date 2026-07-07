@@ -2,6 +2,7 @@
 
 import { getUserByEmail, getUserById } from "@/data/user";
 
+import { UserRole } from "@prisma/client";
 import { UserSettingsSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import { currentUser } from "@/lib/auth";
@@ -28,6 +29,10 @@ export const updateUserSettings = async (
   }
 
   let { name, email, role, password, newPassword } = validatedFields.data;
+
+  if (dbUser.role !== UserRole.ADMIN) {
+    role = undefined;
+  }
 
   if (user.isOAuth) {
     email = undefined;

@@ -28,6 +28,18 @@ export const columns: ColumnDef<Quote>[] = [
     header: "Author",
   },
   {
+    accessorKey: "date",
+    header: "Date",
+    cell: ({ row }) => {
+      const date = row.original.date;
+      if (!date) return;
+      
+      return new Intl.DateTimeFormat('en-us', {
+        dateStyle: "medium"
+      }).format(date);
+    }
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const quote = row.original;

@@ -123,7 +123,9 @@ export function Model(props: JSX.IntrinsicElements['group']) {
       <mesh name="Bulb" castShadow receiveShadow geometry={nodes.Bulb.geometry} material={materials['Material.015']} position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.572]} scale={0.9} />
       <group name="LampModel" position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.572]} scale={0.9}>
         <mesh name="LampModel_1" castShadow receiveShadow geometry={nodes.LampModel_1.geometry} material={materials['Material.019']} />
-        <mesh name="LampModel_2" castShadow receiveShadow geometry={nodes.LampModel_2.geometry} material={materials['Material.003']} />
+        <mesh name="LampModel_2" castShadow receiveShadow geometry={nodes.LampModel_2.geometry}>
+          <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.3} />
+        </mesh>
         <mesh name="LampModel_3" castShadow receiveShadow geometry={nodes.LampModel_3.geometry} material={materials['Material.020']} />
         <mesh name="LampModel_4" castShadow receiveShadow geometry={nodes.LampModel_4.geometry} material={materials['Material.001']} />
         <mesh name="LampModel_5" castShadow receiveShadow geometry={nodes.LampModel_5.geometry} material={materials['Material.010']} />

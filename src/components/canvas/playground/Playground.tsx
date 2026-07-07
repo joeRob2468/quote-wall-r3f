@@ -20,7 +20,7 @@ import { Three } from "@/components/canvas/Three";
 import { easing } from "maath";
 
 const CAMERA_POSITION = { x: 0.5, y: 3, z: -2.6 };
-const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.7 };
+const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.35 };
 
 export const Playground = () => {
   return (
@@ -38,6 +38,10 @@ export const Playground = () => {
           color="#83b7ff"
           castShadow
           shadow-mapSize={2048}
+          shadow-camera-near={20}
+          shadow-camera-far={30}
+          shadow-bias={-0.0003}
+          shadow-normalBias={0.02}
         />
         <pointLight
           position={[-2.9845, 3.583, 0.732]}
@@ -45,6 +49,10 @@ export const Playground = () => {
           color="#f9e9c1"
           castShadow
           shadow-mapSize={2048}
+          shadow-camera-near={0.1}
+          shadow-camera-far={20}
+          shadow-bias={-0.0005}
+          shadow-normalBias={0.02}
         />
 
         {/* Main Scene */}
@@ -66,7 +74,7 @@ export const Playground = () => {
               CAMERA_TARGET_POSITION.y,
               CAMERA_TARGET_POSITION.z,
             ]}
-            focalLength={0.15}
+            focalLength={2.1}
             bokehScale={3}
             height={700}
           />

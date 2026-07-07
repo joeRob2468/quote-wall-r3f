@@ -393,6 +393,8 @@ const LIST_WIDTH = 11.2;
 const LIST_VISIBLE_HEIGHT = 13;
 const SCROLLBAR_X = 5.9;
 const SCROLLBAR_W = 0.5;
+const LIST_VISIBLE_ROWS = Math.ceil(LIST_VISIBLE_HEIGHT / LIST_ROW_HEIGHT);
+const LIST_WINDOW_BUFFER = 4;
 
 type QuoteRowProps = {
   quote: FullQuote;
@@ -463,6 +465,14 @@ const QuoteListScreen = ({
   const dragScrollbarGrabOffset = useRef(0);
   const hasDragged = useRef(false);
 
+  // Only mount rows near the visible viewport instead of all `quotes.length` at once
+  const [windowStart, setWindowStart] = useState(() =>
+    Math.max(0, quoteIndex - LIST_WINDOW_BUFFER)
+  );
+  const [windowEnd, setWindowEnd] = useState(() =>
+    Math.min(quotes.length, quoteIndex + LIST_VISIBLE_ROWS + LIST_WINDOW_BUFFER)
+  );
+
   const totalHeight = quotes.length * LIST_ROW_HEIGHT;
   const maxScroll = Math.max(0, totalHeight - LIST_VISIBLE_HEIGHT);
   const thumbHeight = Math.max(
@@ -498,6 +508,18 @@ const QuoteListScreen = ({
       thumbRef.current.position.y =
         6.5 - thumbHeight / 2 - ratio * thumbTravel;
     }
+
+    const start = Math.max(
+      0,
+      Math.floor(scrollOffset.current / LIST_ROW_HEIGHT) - LIST_WINDOW_BUFFER
+    );
+    const end = Math.min(
+      quotes.length,
+      Math.ceil((scrollOffset.current + LIST_VISIBLE_HEIGHT) / LIST_ROW_HEIGHT) +
+        LIST_WINDOW_BUFFER
+    );
+    if (start !== windowStart) setWindowStart(start);
+    if (end !== windowEnd) setWindowEnd(end);
   });
 
   // UV (v=1 = physical top = portal y +6.5, u=0 = physical right = portal x +6.5)
@@ -593,17 +615,20 @@ const QuoteListScreen = ({
         <meshBasicMaterial color="#65FFBD" />
       </mesh>
 
-      {/* Scrollable rows */}
+      {/* Scrollable rows — only the ones near the viewport are mounted */}
       <group ref={scrollGroupRef}>
-        {quotes.map((quote, i) => (
-          <QuoteRow
-            key={quote.id}
-            quote={quote}
-            isActive={i === quoteIndex}
-            isHovered={i === hoveredIndex}
-            y={6.0 - i * LIST_ROW_HEIGHT}
-          />
-        ))}
+        {quotes.slice(windowStart, windowEnd).map((quote, localIndex) => {
+          const i = windowStart + localIndex;
+          return (
+            <QuoteRow
+              key={quote.id}
+              quote={quote}
+              isActive={i === quoteIndex}
+              isHovered={i === hoveredIndex}
+              y={6.0 - i * LIST_ROW_HEIGHT}
+            />
+          );
+        })}
       </group>
     </Screen>
   );

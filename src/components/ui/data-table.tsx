@@ -113,6 +113,9 @@ export function DataTable<TData, TValue>({
         >
           Previous
         </Button>
+        <span className="text-sm tabular-nums text-muted-foreground">
+          Page {pageIndex + 1} of {Math.max(table.getPageCount(), 1)}
+        </span>
         <Button
           variant="outline"
           size="sm"

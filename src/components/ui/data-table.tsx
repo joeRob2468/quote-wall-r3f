@@ -35,6 +35,12 @@ declare module "@tanstack/react-table" {
 const mobileClass = (hideOnMobile?: boolean) =>
   hideOnMobile ? "hidden md:table-cell" : undefined;
 
+// Rough average glyph width for text-sm Inter, plus p-4 on both sides
+const CHAR_WIDTH_EM = 0.6;
+const CELL_PADDING = "2rem";
+// Longer values wrap/clamp instead of widening the column further
+const MAX_FIT_CHARS = 28;
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -54,6 +60,37 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+
+  // The first column takes whatever space is left. Other columns use their
+  // explicit `size`, or fit their longest value across all rows (not just
+  // the current page) so widths don't change while paging.
+  const getColumnWidths = () => {
+    const rows = table.getCoreRowModel().rows;
+    const widths: Record<string, string | number | undefined> = {};
+
+    table.getAllLeafColumns().forEach((column, index) => {
+      if (index === 0) return;
+      if (column.columnDef.size) {
+        widths[column.id] = column.columnDef.size;
+        return;
+      }
+
+      const header = column.columnDef.header;
+      let longest = typeof header === "string" ? header.length : 0;
+      rows.forEach((row) => {
+        const value = row.getValue(column.id);
+        if (typeof value === "string" || typeof value === "number") {
+          longest = Math.max(longest, String(value).length);
+        }
+      });
+
+      const chars = Math.min(longest, MAX_FIT_CHARS);
+      widths[column.id] = `calc(${chars * CHAR_WIDTH_EM}em + ${CELL_PADDING})`;
+    });
+
+    return widths;
+  };
+  const columnWidths = getColumnWidths();
 
   const { pageIndex, pageSize } = table.getState().pagination;
   const rowCount = table.getRowModel().rows.length;
@@ -89,7 +126,7 @@ export function DataTable<TData, TValue>({
                     className={mobileClass(
                       header.column.columnDef.meta?.hideOnMobile
                     )}
-                    style={{ width: header.column.columnDef.size }}
+                    style={{ width: columnWidths[header.column.id] }}
                   >
                     {header.isPlaceholder
                       ? null

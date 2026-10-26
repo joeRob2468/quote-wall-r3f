@@ -29,7 +29,6 @@ export const columns: ColumnDef<Quote>[] = [
   {
     accessorKey: "author.name",
     header: "Author",
-    size: 180,
   },
   {
     accessorKey: "date",

@@ -183,15 +183,15 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
     composer.autoRenderToScreen = false;
 
     const renderPass = new RenderPass(scene, camera);
-    const copyPass = new CopyPass(buffer);
+    // autoResize off, or the pass resizes `buffer` to the main canvas size
+    const copyPass = new CopyPass(buffer, false);
 
-    const scanlineEffectPass = new EffectPass(
-      camera,
-      new ScanlineEffect({
-        blendFunction: BlendFunction.OVERLAY,
-        density: 0.5,
-      })
-    );
+    // Line count scales with buffer height. 1.6 at 512px gives about the
+    // density 0.5 used to give when the buffer was full canvas height.
+    const scanlineEffect = new ScanlineEffect({
+      blendFunction: BlendFunction.OVERLAY,
+      density: 1.6,
+    });
 
     const chromaticEffectPass = new EffectPass(
       camera,
@@ -210,23 +210,35 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
       ratio: 0.45,
     });
     glitchEffect.mode = GlitchMode.SPORADIC;
-    const glitchEffectPass = new EffectPass(camera, glitchEffect);
 
-    const lensDistortionEffectPass = new EffectPass(
+    const lensDistortionEffect = new LensDistortionEffect({
+      distortion: new THREE.Vector2(0.05, 0.05),
+      principalPoint: new THREE.Vector2(0.0, 0.0),
+      focalLength: new THREE.Vector2(0.9, 0.95),
+    });
+
+    // UV-only effects share one shader pass. Lens goes before glitch so the
+    // sample position is composed the same way as separate passes did.
+    // Chromatic aberration is a convolution effect, which postprocessing
+    // won't merge with UV transforms, so it keeps its own pass.
+    const distortionEffectPass = new EffectPass(
       camera,
-      new LensDistortionEffect({
-        distortion: new THREE.Vector2(0.05, 0.05),
-        principalPoint: new THREE.Vector2(0.0, 0.0),
-        focalLength: new THREE.Vector2(0.9, 0.95),
-      })
+      lensDistortionEffect,
+      glitchEffect,
+      scanlineEffect
     );
 
     composer.addPass(renderPass);
-    composer.addPass(scanlineEffectPass);
-    composer.addPass(glitchEffectPass);
+    composer.addPass(distortionEffectPass);
     composer.addPass(chromaticEffectPass);
-    composer.addPass(lensDistortionEffectPass);
     composer.addPass(copyPass);
+
+    // addPass sizes everything to the main canvas, but the screens only
+    // need the buffer's resolution
+    const { width, height } = buffer;
+    composer.inputBuffer.setSize(width, height);
+    composer.outputBuffer.setSize(width, height);
+    composer.passes.forEach((pass) => pass.setSize(width, height));
 
     composerRef.current = composer;
 

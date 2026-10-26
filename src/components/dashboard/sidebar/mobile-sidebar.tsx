@@ -24,7 +24,7 @@ export const MobileSidebar = ({ children }: MobileSidebarProps) => {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger asChild>
-        <Button variant="outline" size="sm" className="self-start md:hidden">
+        <Button variant="outline" size="sm" className="mt-6 self-start md:hidden">
           <Menu className="w-4 h-4 mr-2" />
           Menu
         </Button>

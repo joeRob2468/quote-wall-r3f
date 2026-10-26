@@ -15,7 +15,12 @@ import {
   ScanlineEffect,
 } from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
-import { Text as DreiText, PerspectiveCamera, useFBO } from "@react-three/drei";
+import {
+  Text as DreiText,
+  PerspectiveCamera,
+  useCursor,
+  useFBO,
+} from "@react-three/drei";
 import {
   ReactNode,
   RefObject,
@@ -1007,6 +1012,7 @@ const QuoteListScreen = ({
   const scrollGroupRef = useRef<THREE.Group>(null);
   const thumbRef = useRef<THREE.Mesh>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [scrollbarHovered, setScrollbarHovered] = useState(false);
   const isDragging = useRef<"list" | "scrollbar" | null>(null);
   const dragStartV = useRef(0);
   const dragStartScroll = useRef(0);
@@ -1087,6 +1093,10 @@ const QuoteListScreen = ({
   const isOnScrollbar = (uv: THREE.Vector2) =>
     (uv.x - 0.5) * 13 > SCROLLBAR_X - SCROLLBAR_W;
 
+  // Pointer over a row or a scrollbar that can scroll; hover isn't updated
+  // mid-drag, so it holds while dragging the scrollbar
+  useCursor(hoveredIndex !== null || scrollbarHovered);
+
   return (
     <Screen
       {...props}
@@ -1127,6 +1137,7 @@ const QuoteListScreen = ({
           );
         } else {
           setHoveredIndex(uvToRowIndex(e.uv));
+          setScrollbarHovered(maxScroll > 0 && isOnScrollbar(e.uv));
         }
       }}
       onPointerUp={() => {
@@ -1135,6 +1146,7 @@ const QuoteListScreen = ({
       onPointerLeave={() => {
         isDragging.current = null;
         setHoveredIndex(null);
+        setScrollbarHovered(false);
       }}
       onClick={(e) => {
         if (!e.uv || hasDragged.current) return;
@@ -1209,6 +1221,7 @@ const RANDOM_HOLD_SECONDS = 1.6;
 // that scrambles and decrypts itself now and then
 const RandomScreen = ({ total, onRandom, ...props }: RandomScreenProps) => {
   const [hovered, setHovered] = useState(false);
+  useCursor(hovered);
   const [reel, setReel] = useState("000");
   const [locked, setLocked] = useState<number | null>(null);
   const lockedUntil = useRef(0);
@@ -1288,6 +1301,7 @@ const NavScreen = ({
   ...props
 }: NavScreenProps) => {
   const [hovered, setHovered] = useState(false);
+  useCursor(hovered);
   // Everything inverts on hover, like a selected terminal field
   const ink = hovered ? SCREEN_BACKGROUND : SCREEN_TEXT;
   const chrome = hovered ? "#24564f" : SCREEN_CHROME;

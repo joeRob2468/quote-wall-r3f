@@ -185,7 +185,7 @@ const PANEL_SIZE = 1.5;
 // Distance between scanlines in world units, so they're the same height on
 // every monitor regardless of its size. Much finer than this and they
 // shimmer once the screens are shrunk down on the page.
-const SCANLINE_SPACING = 0.008;
+const SCANLINE_SPACING = 0.011;
 
 type ScreenRendererProps = {
   buffer: THREE.WebGLRenderTarget;

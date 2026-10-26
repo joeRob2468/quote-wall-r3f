@@ -13,12 +13,10 @@ import { getUserByEmail } from "@/data/user";
 import type { NextAuthConfig, Session } from "next-auth";
 import type { Adapter } from "@auth/core/adapters";
 import { JWT } from "@auth/core/jwt";
+import { authConfig } from "@/auth.config";
 
-export const authConfig = {
-  pages: {
-    signIn: "/auth/login",
-    error: "/auth/login",
-  },
+const fullAuthConfig = {
+  ...authConfig,
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID as string,
@@ -157,9 +155,6 @@ export const authConfig = {
     },
   },
   adapter: PrismaAdapter(db) as Adapter,
-  session: { strategy: "jwt" },
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true,
 } satisfies NextAuthConfig;
 
-export const { handlers, auth, signIn, signOut, unstable_update: update } = NextAuth(authConfig);
+export const { handlers, auth, signIn, signOut, unstable_update: update } = NextAuth(fullAuthConfig);

@@ -5,7 +5,11 @@ import {
   publicRoutes,
 } from "@/config/routes";
 
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
+
+// Middleware runs on the Edge runtime, so it gets the DB-free config
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { nextUrl } = req;

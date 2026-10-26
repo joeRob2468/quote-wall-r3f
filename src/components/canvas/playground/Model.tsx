@@ -7,7 +7,7 @@ Files: office_scene.glb [1.53MB] > office_scene-transformed.glb [321.82KB] (79%)
 import * as THREE from 'three'
 
 import { GLTF } from 'three-stdlib'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 
 type GLTFResult = GLTF & {
@@ -114,13 +114,45 @@ type GLTFResult = GLTF & {
   }
 }
 
+// The recorder sits right beside the camera and picks up far too much screen
+// glow, so its parts use darkened copies of the shared materials
+const RECORDER_DARKEN = 0.3
+
 export function Model(props: JSX.IntrinsicElements['group']) {
   const { nodes, materials } = useGLTF('/office_scene-transformed.glb') as GLTFResult
+  const recorder = useMemo(() => {
+    const darken = (material: THREE.MeshStandardMaterial) => {
+      const copy = material.clone()
+      copy.color.multiplyScalar(RECORDER_DARKEN)
+      return copy
+    }
+    return {
+      body: darken(materials['Material.001']),
+      trim: darken(materials['Material.003']),
+      panel: darken(materials['Material.002']),
+      dark: darken(materials['Material.010']),
+      glass: darken(materials['Material.011']),
+      tape: darken(materials['Material.012']),
+      buttons: darken(materials['Material.008']),
+      black: darken(materials['Material.016']),
+      metal: darken(materials['Material.009']),
+      record: darken(materials['Material.006']),
+    }
+  }, [materials])
+  // Bright, self-lit bulb so it blooms. Material.015 is shared with the
+  // radio, so the bulb gets its own copy.
+  const bulb = useMemo(() => {
+    const copy = materials['Material.015'].clone()
+    copy.emissive.set('#fff0dc')
+    copy.emissiveIntensity = 8
+    copy.toneMapped = false
+    return copy
+  }, [materials])
   return (
     <group {...props} dispose={null}>
       <mesh name="Desk" castShadow receiveShadow geometry={nodes.Desk.geometry} material={materials.desk_mat} position={[5.966, 3.335, 3.206]} rotation={[-Math.PI, 0.003, -3.141]} scale={0.058} />
       <mesh name="Desk_No_Drawers" castShadow receiveShadow geometry={nodes.Desk_No_Drawers.geometry} material={materials.desk_mat} position={[-5.969, 3.27, 0.62]} rotation={[0, Math.PI / 2, 0]} scale={0.058} />
-      <mesh name="Bulb" castShadow receiveShadow geometry={nodes.Bulb.geometry} material={materials['Material.015']} position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.572]} scale={0.9} />
+      <mesh name="Bulb" castShadow receiveShadow geometry={nodes.Bulb.geometry} material={bulb} position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.572]} scale={0.9} />
       <group name="LampModel" position={[-7.2, 7.166, 1.464]} rotation={[-Math.PI / 2, 0, -0.572]} scale={0.9}>
         <mesh name="LampModel_1" castShadow receiveShadow geometry={nodes.LampModel_1.geometry} material={materials['Material.019']} />
         <mesh name="LampModel_2" castShadow receiveShadow geometry={nodes.LampModel_2.geometry}>
@@ -150,18 +182,22 @@ export function Model(props: JSX.IntrinsicElements['group']) {
         <mesh name="Radio_8" castShadow receiveShadow geometry={nodes.Radio_8.geometry} material={materials['Material.031']} />
       </group>
       <group name="TapePlayer001" position={[-5.838, 7.168, -3.687]} rotation={[-Math.PI / 2, 0, -1.591]} scale={1.526}>
-        <mesh name="TapePlayer" castShadow receiveShadow geometry={nodes.TapePlayer.geometry} material={materials['Material.001']} />
-        <mesh name="TapePlayer_1" castShadow receiveShadow geometry={nodes.TapePlayer_1.geometry} material={materials['Material.003']} />
-        <mesh name="TapePlayer_2" castShadow receiveShadow geometry={nodes.TapePlayer_2.geometry} material={materials['Material.002']} />
-        <mesh name="TapePlayer_3" castShadow receiveShadow geometry={nodes.TapePlayer_3.geometry} material={materials['Material.010']} />
-        <mesh name="TapePlayer_4" castShadow receiveShadow geometry={nodes.TapePlayer_4.geometry} material={materials['Material.011']} />
-        <mesh name="TapePlayer_5" castShadow receiveShadow geometry={nodes.TapePlayer_5.geometry} material={materials['Material.012']} />
-        <mesh name="TapePlayer_6" castShadow receiveShadow geometry={nodes.TapePlayer_6.geometry} material={materials['Material.008']} />
-        <mesh name="TapePlayer_7" castShadow receiveShadow geometry={nodes.TapePlayer_7.geometry} material={materials['Material.016']} />
-        <mesh name="TapePlayer_8" castShadow receiveShadow geometry={nodes.TapePlayer_8.geometry} material={materials['Material.009']} />
+        <mesh name="TapePlayer" castShadow receiveShadow geometry={nodes.TapePlayer.geometry} material={recorder.body} />
+        <mesh name="TapePlayer_1" castShadow receiveShadow geometry={nodes.TapePlayer_1.geometry} material={recorder.trim} />
+        <mesh name="TapePlayer_2" castShadow receiveShadow geometry={nodes.TapePlayer_2.geometry} material={recorder.panel} />
+        <mesh name="TapePlayer_3" castShadow receiveShadow geometry={nodes.TapePlayer_3.geometry} material={recorder.dark} />
+        <mesh name="TapePlayer_4" castShadow receiveShadow geometry={nodes.TapePlayer_4.geometry} material={recorder.glass} />
+        <mesh name="TapePlayer_5" castShadow receiveShadow geometry={nodes.TapePlayer_5.geometry} material={recorder.tape} />
+        <mesh name="TapePlayer_6" castShadow receiveShadow geometry={nodes.TapePlayer_6.geometry} material={recorder.buttons} />
+        <mesh name="TapePlayer_7" castShadow receiveShadow geometry={nodes.TapePlayer_7.geometry} material={recorder.black} />
+        <mesh name="TapePlayer_8" castShadow receiveShadow geometry={nodes.TapePlayer_8.geometry} material={recorder.metal} />
+        {/* Gauges keep their original, lit-looking material */}
         <mesh name="TapePlayer_9" castShadow receiveShadow geometry={nodes.TapePlayer_9.geometry} material={materials['Material.013']} />
-        <mesh name="TapePlayer_10" castShadow receiveShadow geometry={nodes.TapePlayer_10.geometry} material={materials['Material.006']} />
-        <mesh name="TapePlayer_11" castShadow receiveShadow geometry={nodes.TapePlayer_11.geometry} material={materials.REEL} />
+        <mesh name="TapePlayer_10" castShadow receiveShadow geometry={nodes.TapePlayer_10.geometry} material={recorder.record} />
+        {/* REEL is pure white in the model; replaced like the rest */}
+        <mesh name="TapePlayer_11" castShadow receiveShadow geometry={nodes.TapePlayer_11.geometry}>
+          <meshStandardMaterial color="#2a2a2a" roughness={0.6} />
+        </mesh>
       </group>
       <group name="Tuner_Model" position={[-6.587, 6.287, 1.208]} rotation={[-Math.PI / 2, 0, -0.734]} scale={0.791}>
         <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={materials['Material.026']} />

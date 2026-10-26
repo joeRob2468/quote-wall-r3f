@@ -9,6 +9,8 @@ import * as THREE from 'three'
 import { GLTF } from 'three-stdlib'
 import React, { useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
+import { DriveLights } from './DriveLights'
+import { SpinningReels } from './SpinningReels'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -115,17 +117,24 @@ type GLTFResult = GLTF & {
 }
 
 // The recorder sits right beside the camera and picks up far too much screen
-// glow, so its parts use darkened copies of the shared materials
+// glow, so its parts use darkened copies of the shared materials. The tuner
+// cabinets get the same treatment so all the device casings match.
 const RECORDER_DARKEN = 0.3
 
-export function Model(props: JSX.IntrinsicElements['group']) {
+const darken = (material: THREE.MeshStandardMaterial) => {
+  const copy = material.clone()
+  copy.color.multiplyScalar(RECORDER_DARKEN)
+  return copy
+}
+
+type ModelProps = JSX.IntrinsicElements['group'] & {
+  // Whether the desk lamp's bulb is lit
+  lampOn?: boolean
+}
+
+export function Model({ lampOn = true, ...props }: ModelProps) {
   const { nodes, materials } = useGLTF('/office_scene-transformed.glb') as GLTFResult
   const recorder = useMemo(() => {
-    const darken = (material: THREE.MeshStandardMaterial) => {
-      const copy = material.clone()
-      copy.color.multiplyScalar(RECORDER_DARKEN)
-      return copy
-    }
     return {
       body: darken(materials['Material.001']),
       trim: darken(materials['Material.003']),
@@ -139,15 +148,42 @@ export function Model(props: JSX.IntrinsicElements['group']) {
       record: darken(materials['Material.006']),
     }
   }, [materials])
+  const tuner = useMemo(
+    () => ({
+      casing: darken(materials['Material.026']),
+      body: darken(materials['Material.001']),
+      rails: darken(materials['Material.010']),
+      panels: darken(materials['Material.009']),
+      trim: darken(materials['Material.003']),
+    }),
+    [materials]
+  )
   // Bright, self-lit bulb so it blooms. Material.015 is shared with the
   // radio, so the bulb gets its own copy.
   const bulb = useMemo(() => {
     const copy = materials['Material.015'].clone()
-    copy.emissive.set('#fff0dc')
-    copy.emissiveIntensity = 8
+    if (lampOn) {
+      copy.emissive.set('#fff0dc')
+      copy.emissiveIntensity = 8
+      copy.toneMapped = false
+    } else {
+      // The model's material is already emissive white; switch that off too
+      copy.emissive.set('#000000')
+    }
+    return copy
+  }, [materials, lampOn])
+  // Recorder gauges: soft warm backlight, bright enough to bloom a little
+  const gauges = useMemo(() => {
+    const copy = materials['Material.013'].clone()
+    copy.emissive.set('#ffc46b')
+    copy.emissiveIntensity = 1.4
     copy.toneMapped = false
     return copy
   }, [materials])
+  const reelMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: '#2a2a2a', roughness: 0.6 }),
+    []
+  )
   return (
     <group {...props} dispose={null}>
       <mesh name="Desk" castShadow receiveShadow geometry={nodes.Desk.geometry} material={materials.desk_mat} position={[5.966, 3.335, 3.206]} rotation={[-Math.PI, 0.003, -3.141]} scale={0.058} />
@@ -178,7 +214,8 @@ export function Model(props: JSX.IntrinsicElements['group']) {
         <mesh name="Radio_4" castShadow receiveShadow geometry={nodes.Radio_4.geometry} material={materials['Material.005']} />
         <mesh name="Radio_5" castShadow receiveShadow geometry={nodes.Radio_5.geometry} material={materials['Material.015']} />
         <mesh name="Radio_6" castShadow receiveShadow geometry={nodes.Radio_6.geometry} material={materials['Material.006']} />
-        <mesh name="Radio_7" castShadow receiveShadow geometry={nodes.Radio_7.geometry} material={materials['Material.007']} />
+        {/* The display's "88:88" segments; replaced by the live LedClock */}
+        <mesh name="Radio_7" visible={false} geometry={nodes.Radio_7.geometry} material={materials['Material.007']} />
         <mesh name="Radio_8" castShadow receiveShadow geometry={nodes.Radio_8.geometry} material={materials['Material.031']} />
       </group>
       <group name="TapePlayer001" position={[-5.838, 7.168, -3.687]} rotation={[-Math.PI / 2, 0, -1.591]} scale={1.526}>
@@ -191,34 +228,44 @@ export function Model(props: JSX.IntrinsicElements['group']) {
         <mesh name="TapePlayer_6" castShadow receiveShadow geometry={nodes.TapePlayer_6.geometry} material={recorder.buttons} />
         <mesh name="TapePlayer_7" castShadow receiveShadow geometry={nodes.TapePlayer_7.geometry} material={recorder.black} />
         <mesh name="TapePlayer_8" castShadow receiveShadow geometry={nodes.TapePlayer_8.geometry} material={recorder.metal} />
-        {/* Gauges keep their original, lit-looking material */}
-        <mesh name="TapePlayer_9" castShadow receiveShadow geometry={nodes.TapePlayer_9.geometry} material={materials['Material.013']} />
+        {/* Gauges keep a lit look (not darkened like the rest of the recorder) */}
+        <mesh name="TapePlayer_9" castShadow receiveShadow geometry={nodes.TapePlayer_9.geometry} material={gauges} />
         <mesh name="TapePlayer_10" castShadow receiveShadow geometry={nodes.TapePlayer_10.geometry} material={recorder.record} />
         {/* REEL is pure white in the model; replaced like the rest */}
-        <mesh name="TapePlayer_11" castShadow receiveShadow geometry={nodes.TapePlayer_11.geometry}>
-          <meshStandardMaterial color="#2a2a2a" roughness={0.6} />
-        </mesh>
+        <SpinningReels geometry={nodes.TapePlayer_11.geometry} material={reelMaterial} />
       </group>
       <group name="Tuner_Model" position={[-6.587, 6.287, 1.208]} rotation={[-Math.PI / 2, 0, -0.734]} scale={0.791}>
-        <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={materials['Material.026']} />
-        <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={materials['Material.001']} />
+        <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={tuner.casing} />
+        <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={tuner.body} />
         <mesh name="Tuner_Geo_2" castShadow receiveShadow geometry={nodes.Tuner_Geo_2.geometry} material={materials['Material.008']} />
-        <mesh name="Tuner_Geo_3" castShadow receiveShadow geometry={nodes.Tuner_Geo_3.geometry} material={materials['Material.007']} />
-        <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={materials['Material.003']} />
+        <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={tuner.rails} />
+        {/* Buttons (Tuner_Geo_3) and small panels (part of Tuner_Geo_7), lit */}
+        <DriveLights
+          strip={nodes.Tuner_Geo_3.geometry}
+          slots={nodes.Tuner_Geo_5.geometry}
+          panelSource={nodes.Tuner_Geo_7.geometry}
+          panelMaterial={tuner.panels}
+          panelPhase={0}
+        />
+        <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={tuner.trim} />
         <mesh name="Tuner_Geo_5" castShadow receiveShadow geometry={nodes.Tuner_Geo_5.geometry} material={materials['Material.002']} />
-        <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={materials['Material.010']} />
-        <mesh name="Tuner_Geo_7" castShadow receiveShadow geometry={nodes.Tuner_Geo_7.geometry} material={materials['Material.009']} />
         <mesh name="Tuner_Geo_8" castShadow receiveShadow geometry={nodes.Tuner_Geo_8.geometry} material={materials['Material.016']} />
       </group>
       <group name="Tuner_Model_2" position={[-4.713, 6.287, 2.462]} rotation={[-Math.PI / 2, 0, -0.507]} scale={0.791}>
-        <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={materials['Material.026']} />
-        <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={materials['Material.001']} />
+        <mesh name="Tuner_Geo" castShadow receiveShadow geometry={nodes.Tuner_Geo.geometry} material={tuner.casing} />
+        <mesh name="Tuner_Geo_1" castShadow receiveShadow geometry={nodes.Tuner_Geo_1.geometry} material={tuner.body} />
         <mesh name="Tuner_Geo_2" castShadow receiveShadow geometry={nodes.Tuner_Geo_2.geometry} material={materials['Material.008']} />
-        <mesh name="Tuner_Geo_3" castShadow receiveShadow geometry={nodes.Tuner_Geo_3.geometry} material={materials['Material.007']} />
-        <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={materials['Material.003']} />
+        <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={tuner.rails} />
+        {/* Buttons (Tuner_Geo_3) and small panels (part of Tuner_Geo_7), lit */}
+        <DriveLights
+          strip={nodes.Tuner_Geo_3.geometry}
+          slots={nodes.Tuner_Geo_5.geometry}
+          panelSource={nodes.Tuner_Geo_7.geometry}
+          panelMaterial={tuner.panels}
+          panelPhase={1.6}
+        />
+        <mesh name="Tuner_Geo_4" castShadow receiveShadow geometry={nodes.Tuner_Geo_4.geometry} material={tuner.trim} />
         <mesh name="Tuner_Geo_5" castShadow receiveShadow geometry={nodes.Tuner_Geo_5.geometry} material={materials['Material.002']} />
-        <mesh name="Tuner_Geo_6" castShadow receiveShadow geometry={nodes.Tuner_Geo_6.geometry} material={materials['Material.010']} />
-        <mesh name="Tuner_Geo_7" castShadow receiveShadow geometry={nodes.Tuner_Geo_7.geometry} material={materials['Material.009']} />
         <mesh name="Tuner_Geo_8" castShadow receiveShadow geometry={nodes.Tuner_Geo_8.geometry} material={materials['Material.016']} />
       </group>
     </group>

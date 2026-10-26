@@ -15,16 +15,23 @@ import { BlendFunction } from "postprocessing";
 import { Computers } from "./Computers";
 import { Model } from "./Model";
 import { ScreenBloom } from "./ScreenBloom";
+import { LedClock } from "./LedClock";
 import { Smoke } from "./Smoke";
 import { addFogLight, fogTime, installDriftingFog } from "./driftingFog";
 import ColorGrade from "./shaders/ColorGradeEffect";
 import PosterizationEffect from "./shaders/PosterizationEffect";
-import { Suspense, useEffect, useMemo } from "react";
-import { BackSide, Object3D, Vector3 } from "three";
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
+import { BackSide, Object3D, RectAreaLight, Vector3 } from "three";
 import { Three } from "@/components/canvas/Three";
 import { easing } from "maath";
 
-const FOG_COLOR = "#05090a";
+const FOG_COLOR = "#050b0b";
 const FOG_DENSITY = 0.2;
 // Middle of the monitor bank, in world space; the smoke is lit from here
 const SMOKE_GLOW_CENTER: [number, number, number] = [0.5, 3.2, 1.2];
@@ -70,27 +77,30 @@ export const Playground = () => {
         />
         {/* Warm desk lamp. `distance` cuts it off so it lights its corner
           instead of the whole scene. */}
-        <pointLight
-          position={[-2.9845, 3.583, 0.732]}
-          intensity={3}
-          distance={4}
-          color={LAMP_COLOR}
-          castShadow
-          shadow-mapSize={2048}
-          shadow-camera-near={0.1}
-          shadow-camera-far={20}
-          shadow-bias={-0.0005}
-          shadow-normalBias={0.02}
-        />
+        {LAMP_ON && (
+          <pointLight
+            position={[-2.9845, 3.583, 0.732]}
+            intensity={3}
+            distance={4}
+            color={LAMP_COLOR}
+            castShadow
+            shadow-mapSize={2048}
+            shadow-camera-near={0.1}
+            shadow-camera-far={20}
+            shadow-bias={-0.0005}
+            shadow-normalBias={0.02}
+          />
+        )}
 
         {/* Main Scene */}
         <group position={[-0, -1, 0]}>
-          <Model scale={0.5} />
+          <Model scale={0.5} lampOn={LAMP_ON} />
           <Computers scale={0.5} />
         </group>
 
         <Smoke glowCenter={SMOKE_GLOW_CENTER} />
-        <LampSpot />
+        {LAMP_ON && <LampSpot />}
+        <DeviceGlow />
 
         {/* Postprocessing */}
         <EffectComposer>
@@ -123,7 +133,7 @@ export const Playground = () => {
           <ScreenBloom intensity={3.75} radius={0.9} />
           {/* Cool blue lift in the shadows; after bloom so the haze is graded
             too, before posterize so the bands come from graded colours */}
-          <ColorGrade shadowStrength={0.03} contrast={0.35} />
+          <ColorGrade shadowTint="#1a4a5c" shadowStrength={0.03} contrast={0.35} />
           <AdaptivePixelation baseGranularity={2} referenceWidth={1920} />
           <Noise
             premultiply
@@ -223,6 +233,9 @@ function CameraRig() {
 // Desk lamp bulb and the lampshade's axis, measured from the model in world
 // space; the beam follows the shade rather than pointing straight down
 // Warm, but closer to incandescent white than orange
+// Desk lamp switched off for now: its warm light competed with the screens.
+// Flip to bring back the bulb glow, its spot on the desk and its fog halo.
+const LAMP_ON = false;
 const LAMP_COLOR = "#ffe6c8";
 const LAMP_BULB: [number, number, number] = [-2.991, 4.5, 1.097];
 const LAMP_DIRECTION: [number, number, number] = [0.556, -0.755, 0.348];
@@ -270,4 +283,80 @@ function FogDrift() {
     fogTime.value += delta;
   });
   return null;
+}
+
+// Small light sources on the props, in world space (measured from the model):
+// the radio's clock display and the recorder's gauge panel. Both are flat
+// faces, so each gets an area light the size of the face, plus a faint glow
+// in the fog.
+const CLOCK_FACE = {
+  center: new Vector3(3.763, 1.996, 0.072),
+  normal: new Vector3(-0.98, 0, -0.199).normalize(),
+  width: 0.23,
+  height: 0.086,
+  color: "#ff2a1a",
+};
+const GAUGE_FACE = {
+  center: new Vector3(-3.217, 1.869, -0.91),
+  normal: new Vector3(1, 0, 0.02).normalize(),
+  width: 0.552,
+  height: 0.172,
+  color: "#ffc46b",
+};
+
+type FaceLightProps = {
+  face: typeof CLOCK_FACE;
+  intensity: number;
+};
+
+const FaceLight = ({ face, intensity }: FaceLightProps) => {
+  const ref = useRef<RectAreaLight>(null);
+  useLayoutEffect(() => {
+    const light = ref.current;
+    if (!light) return;
+    light.position.copy(face.center).addScaledVector(face.normal, 0.01);
+    // Lights aim their -Z (the way an area light shines) at the target
+    light.lookAt(light.position.clone().add(face.normal));
+  }, [face]);
+  return (
+    <rectAreaLight
+      ref={ref}
+      width={face.width}
+      height={face.height}
+      color={face.color}
+      intensity={intensity}
+    />
+  );
+};
+
+function DeviceGlow() {
+  useEffect(() => {
+    const removeClock = addFogLight({
+      position: CLOCK_FACE.center.clone().addScaledVector(CLOCK_FACE.normal, 0.2),
+      color: CLOCK_FACE.color,
+      intensity: 0.08,
+    });
+    const removeGauges = addFogLight({
+      position: GAUGE_FACE.center.clone().addScaledVector(GAUGE_FACE.normal, 0.2),
+      color: GAUGE_FACE.color,
+      intensity: 0.05,
+    });
+    return () => {
+      removeClock();
+      removeGauges();
+    };
+  }, []);
+
+  return (
+    <>
+      <LedClock
+        center={CLOCK_FACE.center}
+        normal={CLOCK_FACE.normal}
+        width={CLOCK_FACE.width}
+        height={CLOCK_FACE.height}
+      />
+      <FaceLight face={CLOCK_FACE} intensity={6} />
+      <FaceLight face={GAUGE_FACE} intensity={2} />
+    </>
+  );
 }

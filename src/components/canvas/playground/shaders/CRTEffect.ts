@@ -76,7 +76,7 @@ export class CRTEffect extends Effect {
     maskTriads = 100,
     maskStrength = 0.2,
     barStrength = 0.005,
-    barColor = new Color('#65FFBD'),
+    barColor = new Color('#9fe8d6'),
     barSpeed = 0.2,
     barSpeedVariation = 0.25,
     barWidth = 0.15,

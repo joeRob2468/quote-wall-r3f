@@ -35,6 +35,7 @@ import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLigh
 import Text from "./Text";
 import { addFogLight } from "./driftingFog";
 import { addScreenBloomTarget } from "./ScreenBloom";
+import { triggerDriveBurst } from "./DriveLights";
 import { getQuotes } from "@/data/quote";
 import { useQuery } from "@tanstack/react-query";
 
@@ -49,6 +50,14 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
   });
 
   const [quoteIndex, setQuoteIndex] = useState<number>(0);
+
+  // Drive lights burst whenever the quote changes, like the screen glitch
+  const lastQuoteIndex = useRef(quoteIndex);
+  useEffect(() => {
+    if (lastQuoteIndex.current === quoteIndex) return;
+    lastQuoteIndex.current = quoteIndex;
+    triggerDriveBurst();
+  }, [quoteIndex]);
 
   const showPreviousQuote = () => {
     if (!data?.length) return;
@@ -188,10 +197,12 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
 
 // Lit screen background. Bright enough that the whole screen face glows,
 // not just the text.
-const SCREEN_BACKGROUND = "#041d13";
+const SCREEN_BACKGROUND = "#06201e";
 // Large screen text. Dimmer than the small quote-list text, since big glyphs
 // bloom much more and get hard to read at full brightness.
-const SCREEN_TEXT = "#5ce9ab";
+const SCREEN_TEXT = "#9fe8d6";
+// Small text (quote list), kept a little brighter than SCREEN_TEXT
+const SCREEN_TEXT_SMALL = "#b6f5e6";
 
 // Size of a screen's display plane in world space (its geometry is sized to
 // the model's original screen glass, then scaled by the monitor's group)
@@ -364,13 +375,13 @@ type ScreenProps = {
 
 // Screen glow cast onto the desk and casings. Screens are mostly dark with
 // green text, so the light is a dim green rather than the text colour.
-const SCREEN_LIGHT_COLOR = "#3DFF9A";
+const SCREEN_LIGHT_COLOR = "#7fdccb";
 const SCREEN_LIGHT_INTENSITY = 2;
 // Weak light right at the glass that catches the inside walls of the
 // casing's recess, brightest by the screen and fading toward the front
 const SCREEN_RECESS_LIGHT_INTENSITY = 0.2;
 // Glow each screen puts into the fog around it
-const SCREEN_FOG_COLOR = "#7fe0bf";
+const SCREEN_FOG_COLOR = "#9fe0d8";
 const SCREEN_FOG_INTENSITY = 0.25;
 // Brightness multiplier on the screen image, so it blooms
 const SCREEN_GLOW = 2.2;
@@ -687,8 +698,8 @@ type QuoteRowProps = {
 };
 
 const QuoteRow = ({ quote, isActive, isHovered, y }: QuoteRowProps) => {
-  const bgColor = isActive || isHovered ? "#0F4A30" : SCREEN_BACKGROUND;
-  const textColor = "#65FFBD";
+  const bgColor = isActive || isHovered ? "#0f3e3a" : SCREEN_BACKGROUND;
+  const textColor = SCREEN_TEXT_SMALL;
   const truncated =
     quote.body.length > 48 ? quote.body.substring(0, 45) + "..." : quote.body;
 
@@ -889,7 +900,7 @@ const QuoteListScreen = ({
       {/* Scrollbar track */}
       <mesh position={[SCROLLBAR_X, LIST_TOP - LIST_VISIBLE_HEIGHT / 2, 0]}>
         <planeGeometry args={[SCROLLBAR_W, LIST_VISIBLE_HEIGHT]} />
-        <meshBasicMaterial color="#0A2A1A" />
+        <meshBasicMaterial color="#0a2a28" />
       </mesh>
 
       {/* Scrollbar thumb */}
@@ -898,7 +909,7 @@ const QuoteListScreen = ({
         position={[SCROLLBAR_X, LIST_TOP - thumbHeight / 2, 0.01]}
       >
         <planeGeometry args={[SCROLLBAR_W, thumbHeight]} />
-        <meshBasicMaterial color="#65FFBD" />
+        <meshBasicMaterial color={SCREEN_TEXT_SMALL} />
       </mesh>
 
       {/* Scrollable rows — only the ones near the viewport are mounted */}
@@ -953,7 +964,7 @@ const NavScreen = ({
     >
       <color
         attach="background"
-        args={[hovered ? "#66AE8F" : SCREEN_BACKGROUND]}
+        args={[hovered ? "#3e7d75" : SCREEN_BACKGROUND]}
       />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />

@@ -145,7 +145,7 @@ type SmokeProps = {
 export const Smoke = ({
   glowCenter,
   glowRadius = 3.5,
-  color = "#8fb8a4",
+  color = "#9fbcbc",
   opacity = 0.08,
 }: SmokeProps) => {
   const center = useMemo(() => new THREE.Vector3(...glowCenter), [glowCenter]);

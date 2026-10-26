@@ -10,6 +10,7 @@ import { useGLTF } from '@react-three/drei'
 
 import { GLTF } from 'three-stdlib'
 import { Screens } from './Screens'
+import { IndicatorLights } from './IndicatorLights'
 
 export type GLTFResult = GLTF & {
   nodes: {
@@ -160,8 +161,11 @@ export const Computers = (props: JSX.IntrinsicElements['group']) => {
 
       <Screens nodes={nodes} materials={materials} />
 
-      {/* @ts-expect-error */}
-      <instancedMesh args={[nodes.Power.geometry, materials['Material.032'], 6]} name="Power" castShadow receiveShadow instanceMatrix={nodes.Power.instanceMatrix} /> 
+      <IndicatorLights
+        geometry={nodes.Power.geometry}
+        // @ts-expect-error instanceMatrix comes from the instanced GLTF node
+        instanceMatrix={nodes.Power.instanceMatrix}
+      />
     </group>
   )
 }

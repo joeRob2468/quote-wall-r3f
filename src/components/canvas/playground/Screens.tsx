@@ -16,7 +16,14 @@ import {
 } from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
 import { Text as DreiText, PerspectiveCamera, useFBO } from "@react-three/drei";
-import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import {
+  ReactNode,
+  RefObject,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal, useFrame, useThree } from "@react-three/fiber";
 
 import { FullQuote } from "@/types/quote";
@@ -67,6 +74,7 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       <>
         <ScreenLoading
           message={message}
+          resolution={1024}
           panel={nodes.Large_Monitor_Screen.geometry}
           position={[0.678, 7.601, 2.569]}
           rotation={[-Math.PI / 2, 0, -0.088]}
@@ -172,7 +180,19 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
   );
 };
 
-const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
+// Side length of each screen's display plane, before group scaling
+const PANEL_SIZE = 1.5;
+// Distance between scanlines in world units, so they're the same height on
+// every monitor regardless of its size. Much finer than this and they
+// shimmer once the screens are shrunk down on the page.
+const SCANLINE_SPACING = 0.008;
+
+type ScreenRendererProps = {
+  buffer: THREE.WebGLRenderTarget;
+  panelRef: RefObject<THREE.Mesh>;
+};
+
+const ScreenRenderer = ({ buffer, panelRef }: ScreenRendererProps) => {
   const { gl, camera, scene } = useThree();
   const composerRef = useRef<EffectComposer | null>(null);
 
@@ -186,11 +206,8 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
     // autoResize off, or the pass resizes `buffer` to the main canvas size
     const copyPass = new CopyPass(buffer, false);
 
-    // Line count scales with buffer height. 1.6 at 512px gives about the
-    // density 0.5 used to give when the buffer was full canvas height.
     const scanlineEffect = new ScanlineEffect({
       blendFunction: BlendFunction.OVERLAY,
-      density: 1.6,
     });
 
     const chromaticEffectPass = new EffectPass(
@@ -236,6 +253,19 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
     // addPass sizes everything to the main canvas, but the screens only
     // need the buffer's resolution
     const { width, height } = buffer;
+
+    // ScanlineEffect draws sin(uv.y * height * density), i.e. one line per
+    // 2π of that, so derive density from the panel's on-scene height
+    const panel = panelRef.current;
+    if (panel) {
+      panel.updateWorldMatrix(true, false);
+      const panelHeight =
+        PANEL_SIZE *
+        new THREE.Vector3().setFromMatrixColumn(panel.matrixWorld, 1).length();
+      const lines = panelHeight / SCANLINE_SPACING;
+      scanlineEffect.density = (lines * 2 * Math.PI) / height;
+    }
+
     composer.inputBuffer.setSize(width, height);
     composer.outputBuffer.setSize(width, height);
     composer.passes.forEach((pass) => pass.setSize(width, height));
@@ -250,7 +280,7 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
       copyPass.fullscreenMaterial.dispose();
       composer.dispose();
     };
-  }, [gl, scene, camera, buffer]);
+  }, [gl, scene, camera, buffer, panelRef]);
 
   useFrame(() => {
     const composer = composerRef.current;
@@ -267,11 +297,21 @@ type ScreenProps = {
   panel: THREE.BufferGeometry<THREE.NormalBufferAttributes>;
   children?: ReactNode;
   fov?: number;
+  // Texture size in pixels. Bigger monitors need more to keep scanlines and
+  // text crisp at the same physical size as on the small ones.
+  resolution?: number;
 } & JSX.IntrinsicElements["group"];
 
-const Screen = ({ panel, children, fov, ...props }: ScreenProps) => {
+const Screen = ({
+  panel,
+  children,
+  fov,
+  resolution = 512,
+  ...props
+}: ScreenProps) => {
   const [scene] = useState(() => new THREE.Scene());
-  const buffer = useFBO(512, 512);
+  const buffer = useFBO(resolution, resolution);
+  const panelRef = useRef<THREE.Mesh>(null);
 
   return (
     <group {...props}>
@@ -286,13 +326,13 @@ const Screen = ({ panel, children, fov, ...props }: ScreenProps) => {
               {...(fov !== undefined && { fov })}
             />
             {children}
-            <ScreenRenderer buffer={buffer} />
+            <ScreenRenderer buffer={buffer} panelRef={panelRef} />
           </Suspense>
         </>,
         scene
       )}
-      <mesh rotation={[-Math.PI / 2, 0, -Math.PI]}>
-        <planeGeometry args={[1.5, 1.5]} />
+      <mesh ref={panelRef} rotation={[-Math.PI / 2, 0, -Math.PI]}>
+        <planeGeometry args={[PANEL_SIZE, PANEL_SIZE]} />
         <meshBasicMaterial toneMapped={false} map={buffer.texture} />
       </mesh>
     </group>
@@ -333,7 +373,7 @@ type ScreenTextProps = {
 
 const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
-    <Screen {...props}>
+    <Screen resolution={1024} {...props}>
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />

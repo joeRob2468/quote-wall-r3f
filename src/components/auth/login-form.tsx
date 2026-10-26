@@ -16,7 +16,6 @@ import { FormError } from "@/components/form-error";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { LoginSchema } from "@/schemas";
-import { SignInButton } from "@/components/auth/auth-buttons";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,11 +25,9 @@ export const LoginForm = () => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const urlError =
-    searchParams.get("error") === "OAuthAccountNotLinked"
-      ? "Email is already in use with a different provider."
-      : searchParams.get("error") === "AccessDenied"
-        ? "Your account is pending admin approval."
-        : "";
+    searchParams.get("error") === "AccessDenied"
+      ? "Your account is pending admin approval."
+      : "";
 
   const router = useRouter();
   const [error, setError] = useState<string | undefined>("");
@@ -114,20 +111,6 @@ export const LoginForm = () => {
           </div>
         </form>
       </Form>
-
-      <div className="mt-6 relative flex items-center justify-center">
-        <div className="flex absolute inset-x-0 -z-10">
-          <div className="border border-t-white border-opacity-30 w-full"></div>
-        </div>
-        <div className="inline-flex items-center bg-background px-2">
-          Or continue with
-        </div>
-      </div>
-
-      <div className="mt-6 flex flex-row gap-3 items-center justify-center">
-        {/* <SignInButton provider="google" /> */}
-        <SignInButton provider="github" />
-      </div>
 
       <p className="mt-10 text-center text-sm">
         Not a member?

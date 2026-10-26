@@ -32,19 +32,13 @@ Go to Cloudflare Zero Trust → Networks → Tunnels, create a tunnel, and point
 cp .env.prod.example .env.prod
 ```
 
-Fill in all values — secrets, OAuth credentials, your tunnel domain, and the tunnel token. Generate `NEXTAUTH_SECRET` with:
+Fill in all values — secrets, your tunnel domain, and the tunnel token. Generate `NEXTAUTH_SECRET` with:
 
 ```bash
 openssl rand -base64 32
 ```
 
-**3. Update OAuth callback URLs**
-
-In your GitHub and Google OAuth app settings, add your tunnel domain as an allowed callback URL:
-- `https://your-domain.com/api/auth/callback/github`
-- `https://your-domain.com/api/auth/callback/google`
-
-**4. Build and start**
+**3. Build and start**
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build

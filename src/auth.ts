@@ -5,8 +5,6 @@ import { db } from "@/lib/db";
 import { getAccountByUserId } from "@/data/account";
 import { getUserById } from "@/data/user";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GitHubProvider from "next-auth/providers/github";
-import GoogleProvider from "next-auth/providers/google";
 import { LoginSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import { getUserByEmail } from "@/data/user";
@@ -18,14 +16,6 @@ import { authConfig } from "@/auth.config";
 const fullAuthConfig = {
   ...authConfig,
   providers: [
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID as string,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-    }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    }),
     CredentialsProvider({
       credentials: {
         email: { label: "Email", type: "text" },

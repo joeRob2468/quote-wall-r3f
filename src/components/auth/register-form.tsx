@@ -16,7 +16,6 @@ import { FormSuccess } from "@/components/form-success";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { RegisterSchema } from "@/schemas";
-import { SignInButton } from "@/components/auth/auth-buttons";
 import { register } from "@/actions/register";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -108,20 +107,6 @@ export const RegisterForm = () => {
           </div>
         </form>
       </Form>
-
-      <div className="mt-6 relative flex items-center justify-center">
-        <div className="flex absolute inset-x-0 -z-10">
-          <div className="border border-t-white border-opacity-30 w-full"></div>
-        </div>
-        <div className="inline-flex items-center bg-background px-2">
-          Or continue with
-        </div>
-      </div>
-
-      <div className="mt-6 flex flex-row gap-3 items-center justify-center">
-        <SignInButton provider="google" />
-        <SignInButton provider="github" />
-      </div>
 
       <p className="mt-10 text-center text-sm">
         Already a member?

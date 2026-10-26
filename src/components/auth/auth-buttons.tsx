@@ -1,34 +1,10 @@
 "use client";
 
-import { GitHub, Google, LogOut } from "@/components/icons";
-import { signIn, signOut } from "next-auth/react";
+import { LogOut } from "@/components/icons";
+import { signOut } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-type SignInButtonProps = {
-  provider: "github" | "google";
-} & React.ComponentPropsWithRef<typeof Button>;
-
-export function SignInButton({ provider, ...props }: SignInButtonProps) {
-  return (
-    <form action={() => signIn(provider)}>
-      {provider === "google" && (
-        <Button variant="secondary" {...props}>
-          <Google className="h-4 w-4 mr-2" />
-          Google
-        </Button>
-      )}
-
-      {provider === "github" && (
-        <Button variant="secondary" {...props}>
-          <GitHub className="h-4 w-4 mr-2" />
-          GitHub
-        </Button>
-      )}
-    </form>
-  );
-}
 
 export function SignOutButton({
   ...props

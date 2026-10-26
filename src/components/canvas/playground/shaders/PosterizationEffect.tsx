@@ -84,7 +84,9 @@ export const PosterizationEffect = forwardRef<Effect, PosterizationProps>(
       effect.uniforms.get('pixelSize')!.value = Math.max(1, pixelSize);
     }, [effect, bits, dither, pixelSize]);
 
-    useEffect(() => () => effect.dispose(), [effect]);
+    // r3f replaces a primitive's dispose with null when dispose={null} is
+    // passed, so call the class's own method
+    useEffect(() => () => Effect.prototype.dispose.call(effect), [effect]);
 
     return <primitive ref={ref} object={effect} dispose={null} />;
   }

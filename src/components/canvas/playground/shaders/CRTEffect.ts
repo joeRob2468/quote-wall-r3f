@@ -74,14 +74,14 @@ export interface CRTEffectOptions {
 export class CRTEffect extends Effect {
   constructor({
     maskTriads = 100,
-    maskStrength = 0.3,
-    barStrength = 0.008,
+    maskStrength = 0.4,
+    barStrength = 0.005,
     barColor = new Color('#65FFBD'),
     barSpeed = 0.2,
     barSpeedVariation = 0.25,
-    barWidth = 0.2,
+    barWidth = 0.15,
     barPhase = 0,
-    barDistortion = 0.0025,
+    barDistortion = 0.002,
   }: CRTEffectOptions = {}) {
     const speed = barSpeed * (1 + (Math.random() * 2 - 1) * barSpeedVariation);
 

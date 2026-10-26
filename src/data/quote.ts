@@ -13,6 +13,7 @@ const getQuote = async (id: string): Promise<FullQuote | null> => {
     });
     return quote;
   } catch (error) {
+    console.error(`Failed to load quote ${id}:`, error);
     return null;
   }
 };
@@ -27,6 +28,7 @@ const getQuotes = async (): Promise<FullQuote[] | []> => {
     });
     return quote;
   } catch (error) {
+    console.error("Failed to load quotes:", error);
     return [];
   }
 };

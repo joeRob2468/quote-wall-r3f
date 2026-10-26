@@ -15,6 +15,7 @@ import {
   ChevronsUpDownIcon,
   CheckIcon,
   PlusIcon,
+  MenuIcon,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -63,6 +64,7 @@ const ChevronsUpDown = (props: LucideProps) => (
 );
 const Check = (props: LucideProps) => <CheckIcon {...props} />;
 const Plus = (props: LucideProps) => <PlusIcon {...props} />;
+const Menu = (props: LucideProps) => <MenuIcon {...props} />;
 
 export {
   Logo,
@@ -80,4 +82,5 @@ export {
   ChevronsUpDown,
   Check,
   Plus,
+  Menu,
 };

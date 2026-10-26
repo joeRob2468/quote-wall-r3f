@@ -54,10 +54,19 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
     setQuoteIndex(next);
   };
 
-  if (isPending || isError) {
+  // getQuotes returns [] when the database query fails, so an empty list
+  // needs the same handling as a failed request
+  if (isPending || isError || !data.length) {
+    const message = isPending
+      ? undefined
+      : isError
+        ? "Couldn't load quotes"
+        : "No quotes yet";
+
     return (
       <>
         <ScreenLoading
+          message={message}
           panel={nodes.Large_Monitor_Screen.geometry}
           position={[0.678, 7.601, 2.569]}
           rotation={[-Math.PI / 2, 0, -0.088]}
@@ -97,11 +106,15 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
     );
   }
 
+  // A refetch can shrink the list (e.g. quotes deleted in the dashboard)
+  const currentIndex = Math.min(quoteIndex, data.length - 1);
+  const currentQuote = data[currentIndex];
+
   return (
     <>
       {/* Center large screen */}
       <MainQuoteScreen
-        quote={data[quoteIndex]}
+        quote={currentQuote}
         panel={nodes.Large_Monitor_Screen.geometry}
         position={[0.678, 7.601, 2.569]}
         rotation={[-Math.PI / 2, 0, -0.088]}
@@ -117,7 +130,7 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       />
       {/* Top left small screen */}
       <DateScreen
-        quote={data[quoteIndex]}
+        quote={currentQuote}
         panel={nodes.Small_Monitor_Screen001.geometry}
         position={[3.722, 8.818, 2.51]}
         rotation={[-Math.PI / 2, 0, 0.049]}
@@ -133,7 +146,7 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Far left small screen — quote list */}
       <QuoteListScreen
         quotes={data}
-        quoteIndex={quoteIndex}
+        quoteIndex={currentIndex}
         setQuoteIndex={setQuoteIndex}
         panel={nodes.Small_Monitor_Screen003.geometry}
         position={[5.902, 6.593, 2.304]}
@@ -150,7 +163,7 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       />
       {/* Top right small screen */}
       <MetaScreen
-        quote={data[quoteIndex]}
+        quote={currentQuote}
         panel={nodes.Small_Monitor_Screen005.geometry}
         position={[-2.345, 8.876, 1.829]}
         rotation={[-Math.PI / 2, 0, -0.257]}
@@ -274,11 +287,29 @@ const Screen = ({ panel, children, fov, ...props }: ScreenProps) => {
   );
 };
 
-const ScreenLoading = ({ ...props }: ScreenProps) => {
-  useFrame((state) => {});
+const ScreenLoading = ({
+  message,
+  ...props
+}: ScreenProps & { message?: string }) => {
   return (
     <Screen {...props}>
-      <color attach="background" args={["#333333"]} />
+      <color attach="background" args={[message ? "#020E09" : "#333333"]} />
+      {message ? (
+        <Flex
+          plane="xy"
+          size={[13, 13, 0]}
+          position={[-13 / 2, 13 / 2, 0]}
+          flexDirection="column"
+          align="center"
+          justify="center"
+        >
+          <Box>
+            <Text maxWidth={13} color={"#65FFBD"} textAlign="center">
+              {message}
+            </Text>
+          </Box>
+        </Flex>
+      ) : null}
     </Screen>
   );
 };

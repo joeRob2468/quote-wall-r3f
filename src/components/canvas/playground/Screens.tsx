@@ -15,6 +15,7 @@ import {
   ScanlineEffect,
 } from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
+import { CRTEffect } from "./shaders/CRTEffect";
 import { Text as DreiText, PerspectiveCamera, useFBO } from "@react-three/drei";
 import {
   ReactNode,
@@ -238,11 +239,15 @@ const ScreenRenderer = ({ buffer, panelRef }: ScreenRendererProps) => {
     // sample position is composed the same way as separate passes did.
     // Chromatic aberration is a convolution effect, which postprocessing
     // won't merge with UV transforms, so it keeps its own pass.
+    // Random phase so the rolling bars don't sweep every monitor in sync
+    const crtEffect = new CRTEffect({ barPhase: Math.random() });
+
     const distortionEffectPass = new EffectPass(
       camera,
       lensDistortionEffect,
       glitchEffect,
-      scanlineEffect
+      scanlineEffect,
+      crtEffect
     );
 
     composer.addPass(renderPass);
@@ -259,11 +264,16 @@ const ScreenRenderer = ({ buffer, panelRef }: ScreenRendererProps) => {
     const panel = panelRef.current;
     if (panel) {
       panel.updateWorldMatrix(true, false);
+      const panelWidth =
+        PANEL_SIZE *
+        new THREE.Vector3().setFromMatrixColumn(panel.matrixWorld, 0).length();
       const panelHeight =
         PANEL_SIZE *
         new THREE.Vector3().setFromMatrixColumn(panel.matrixWorld, 1).length();
       const lines = panelHeight / SCANLINE_SPACING;
       scanlineEffect.density = (lines * 2 * Math.PI) / height;
+      // One phosphor stripe per scanline width, three stripes per triad
+      crtEffect.maskTriads = panelWidth / (3 * SCANLINE_SPACING);
     }
 
     composer.inputBuffer.setSize(width, height);

@@ -25,6 +25,7 @@ export const columns: ColumnDef<Author>[] = [
   },
   {
     id: "actions",
+    size: 64,
     cell: ({ row }) => {
       const author = row.original;
 

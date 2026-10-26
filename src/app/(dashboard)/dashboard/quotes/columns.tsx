@@ -26,10 +26,12 @@ export const columns: ColumnDef<Quote>[] = [
   {
     accessorKey: "author.name",
     header: "Author",
+    size: 180,
   },
   {
     accessorKey: "date",
     header: "Date",
+    size: 140,
     cell: ({ row }) => {
       const date = row.original.date;
       if (!date) return;
@@ -41,6 +43,7 @@ export const columns: ColumnDef<Quote>[] = [
   },
   {
     id: "actions",
+    size: 64,
     cell: ({ row }) => {
       const quote = row.original;
 

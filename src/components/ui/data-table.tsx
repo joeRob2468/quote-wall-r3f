@@ -18,6 +18,9 @@ import {
 
 import { Button } from "./button";
 
+// Fits two lines of text-sm plus p-4 padding, so every row is the same height
+const ROW_HEIGHT = "h-[72px]";
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -34,15 +37,24 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  const { pageIndex, pageSize } = table.getState().pagination;
+  const rowCount = table.getRowModel().rows.length;
+  // Skip padding when everything fits on one page
+  const emptyRows =
+    table.getPageCount() > 1 || pageIndex > 0 ? pageSize - rowCount : 0;
+
   return (
     <>
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.column.columnDef.size }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -62,11 +74,13 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                    <TableCell key={cell.id} className={ROW_HEIGHT}>
+                      <div className="line-clamp-2 max-h-10 break-words">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </div>
                     </TableCell>
                   ))}
                 </TableRow>
@@ -81,6 +95,12 @@ export function DataTable<TData, TValue>({
                 </TableCell>
               </TableRow>
             )}
+            {/* Pad short pages so the table height (and pagination) stays put */}
+            {Array.from({ length: emptyRows }, (_, i) => (
+              <TableRow key={`empty-${i}`} className="hover:bg-transparent">
+                <TableCell colSpan={columns.length} className={ROW_HEIGHT} />
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>

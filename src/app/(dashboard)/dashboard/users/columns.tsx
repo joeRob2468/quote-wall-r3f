@@ -27,6 +27,7 @@ export const columns: ColumnDef<SafeUser>[] = [
   {
     accessorKey: "role",
     header: "Role",
+    size: 120,
     cell: ({ row }) => {
       const role = row.getValue("role");
       return (
@@ -42,6 +43,7 @@ export const columns: ColumnDef<SafeUser>[] = [
   },
   {
     id: "actions",
+    size: 64,
     cell: ({ row }) => {
       const user = row.original;
 

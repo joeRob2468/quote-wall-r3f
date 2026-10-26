@@ -188,14 +188,24 @@ const PANEL_SIZE = 1.5;
 // shimmer once the screens are shrunk down on the page.
 const SCANLINE_SPACING = 0.011;
 
+// How long a screen glitches hard after its content changes
+const GLITCH_BURST_MS = 250;
+
 type ScreenRendererProps = {
   buffer: THREE.WebGLRenderTarget;
   panelRef: RefObject<THREE.Mesh>;
+  glitchKey?: unknown;
 };
 
-const ScreenRenderer = ({ buffer, panelRef }: ScreenRendererProps) => {
+const ScreenRenderer = ({
+  buffer,
+  panelRef,
+  glitchKey,
+}: ScreenRendererProps) => {
   const { gl, camera, scene } = useThree();
   const composerRef = useRef<EffectComposer | null>(null);
+  const glitchRef = useRef<GlitchEffect | null>(null);
+  const lastGlitchKey = useRef(glitchKey);
 
   // Built in an effect rather than useMemo so every composer gets disposed,
   // including on camera changes and Strict Mode's dev remount
@@ -228,6 +238,7 @@ const ScreenRenderer = ({ buffer, panelRef }: ScreenRendererProps) => {
       ratio: 0.45,
     });
     glitchEffect.mode = GlitchMode.SPORADIC;
+    glitchRef.current = glitchEffect;
 
     const lensDistortionEffect = new LensDistortionEffect({
       distortion: new THREE.Vector2(0.05, 0.05),
@@ -284,6 +295,7 @@ const ScreenRenderer = ({ buffer, panelRef }: ScreenRendererProps) => {
 
     return () => {
       composerRef.current = null;
+      glitchRef.current = null;
       // The copy pass targets `buffer`, which useFBO owns. Take it out before
       // disposing, or the composer would dispose the screen's texture too.
       composer.removePass(copyPass);
@@ -291,6 +303,25 @@ const ScreenRenderer = ({ buffer, panelRef }: ScreenRendererProps) => {
       composer.dispose();
     };
   }, [gl, scene, camera, buffer, panelRef]);
+
+  // Glitch hard for a moment whenever glitchKey changes (e.g. a new quote),
+  // then fall back to the occasional random glitches
+  useEffect(() => {
+    if (lastGlitchKey.current === glitchKey) return;
+    lastGlitchKey.current = glitchKey;
+    const glitch = glitchRef.current;
+    if (!glitch) return;
+
+    glitch.mode = GlitchMode.CONSTANT_WILD;
+    const timeout = setTimeout(() => {
+      glitch.mode = GlitchMode.SPORADIC;
+    }, GLITCH_BURST_MS);
+
+    return () => {
+      clearTimeout(timeout);
+      glitch.mode = GlitchMode.SPORADIC;
+    };
+  }, [glitchKey]);
 
   useFrame(() => {
     const composer = composerRef.current;
@@ -310,6 +341,8 @@ type ScreenProps = {
   // Texture size in pixels. Bigger monitors need more to keep scanlines and
   // text crisp at the same physical size as on the small ones.
   resolution?: number;
+  // Changing this triggers a short glitch burst
+  glitchKey?: unknown;
 } & JSX.IntrinsicElements["group"];
 
 const Screen = ({
@@ -317,6 +350,7 @@ const Screen = ({
   children,
   fov,
   resolution = 512,
+  glitchKey,
   ...props
 }: ScreenProps) => {
   const [scene] = useState(() => new THREE.Scene());
@@ -336,7 +370,11 @@ const Screen = ({
               {...(fov !== undefined && { fov })}
             />
             {children}
-            <ScreenRenderer buffer={buffer} panelRef={panelRef} />
+            <ScreenRenderer
+              buffer={buffer}
+              panelRef={panelRef}
+              glitchKey={glitchKey}
+            />
           </Suspense>
         </>,
         scene
@@ -383,7 +421,7 @@ type ScreenTextProps = {
 
 const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
-    <Screen resolution={1024} {...props}>
+    <Screen resolution={1024} glitchKey={quote.id} {...props}>
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
@@ -408,7 +446,7 @@ const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
 
 const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
-    <Screen {...props}>
+    <Screen glitchKey={quote.id} {...props}>
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
@@ -443,7 +481,7 @@ const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
 
 const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
-    <Screen {...props}>
+    <Screen glitchKey={quote.id} {...props}>
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />

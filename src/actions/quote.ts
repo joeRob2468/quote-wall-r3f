@@ -42,6 +42,7 @@ const createQuote = async (values: z.infer<typeof QuoteSchema>) => {
     });
 
     revalidatePath("/dashboard/quotes");
+    revalidatePath("/");
     return { success: "Quote created" };
   } catch (error) {
     return { error: "Failed to create quote" };
@@ -86,6 +87,7 @@ const updateQuote = async (
     });
 
     revalidatePath("/dashboard/quotes");
+    revalidatePath("/");
     return { success: "Quote updated" };
   } catch {
     return { error: "Failed to update quote" };
@@ -108,6 +110,7 @@ const deleteQuote = async (id: Quote["id"]) => {
     });
 
     revalidatePath("/dashboard/quotes");
+    revalidatePath("/");
     return { success: "Quote deleted", author: deletedQuote };
   } catch {
     return { error: "Failed to delete quote" };

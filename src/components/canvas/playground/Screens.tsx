@@ -15,21 +15,26 @@ import {
   ScanlineEffect,
 } from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
-import { CRTEffect } from "./shaders/CRTEffect";
 import { Text as DreiText, PerspectiveCamera, useFBO } from "@react-three/drei";
 import {
   ReactNode,
   RefObject,
   Suspense,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { createPortal, useFrame, useThree } from "@react-three/fiber";
 
+import { CRTEffect } from "./shaders/CRTEffect";
 import { FullQuote } from "@/types/quote";
 import type { GLTFResult } from "./Computers";
+import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import Text from "./Text";
+import { addFogLight } from "./driftingFog";
+import { addScreenBloomTarget } from "./ScreenBloom";
 import { getQuotes } from "@/data/quote";
 import { useQuery } from "@tanstack/react-query";
 
@@ -181,8 +186,24 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
   );
 };
 
-// Side length of each screen's display plane, before group scaling
-const PANEL_SIZE = 1.5;
+// Lit screen background. Bright enough that the whole screen face glows,
+// not just the text.
+const SCREEN_BACKGROUND = "#041d13";
+// Large screen text. Dimmer than the small quote-list text, since big glyphs
+// bloom much more and get hard to read at full brightness.
+const SCREEN_TEXT = "#5ce9ab";
+
+// Size of a screen's display plane in world space (its geometry is sized to
+// the model's original screen glass, then scaled by the monitor's group)
+const panelWorldSize = (panel: THREE.Mesh) => {
+  panel.updateWorldMatrix(true, false);
+  const { width, height } = (panel.geometry as THREE.PlaneGeometry).parameters;
+  const axis = new THREE.Vector3();
+  return {
+    width: width * axis.setFromMatrixColumn(panel.matrixWorld, 0).length(),
+    height: height * axis.setFromMatrixColumn(panel.matrixWorld, 1).length(),
+  };
+};
 // Distance between scanlines in world units, so they're the same height on
 // every monitor regardless of its size. Much finer than this and they
 // shimmer once the screens are shrunk down on the page.
@@ -243,7 +264,9 @@ const ScreenRenderer = ({
     const lensDistortionEffect = new LensDistortionEffect({
       distortion: new THREE.Vector2(0.05, 0.05),
       principalPoint: new THREE.Vector2(0.0, 0.0),
-      focalLength: new THREE.Vector2(0.9, 0.95),
+      // Low enough that the bulge never samples past the image edge (the
+      // shader blacks that out): corners need f * (1 + 2 * distortion) <= 1
+      focalLength: new THREE.Vector2(0.9, 0.9),
     });
 
     // UV-only effects share one shader pass. Lens goes before glitch so the
@@ -274,13 +297,7 @@ const ScreenRenderer = ({
     // 2π of that, so derive density from the panel's on-scene height
     const panel = panelRef.current;
     if (panel) {
-      panel.updateWorldMatrix(true, false);
-      const panelWidth =
-        PANEL_SIZE *
-        new THREE.Vector3().setFromMatrixColumn(panel.matrixWorld, 0).length();
-      const panelHeight =
-        PANEL_SIZE *
-        new THREE.Vector3().setFromMatrixColumn(panel.matrixWorld, 1).length();
+      const { width: panelWidth, height: panelHeight } = panelWorldSize(panel);
       const lines = panelHeight / SCANLINE_SPACING;
       scanlineEffect.density = (lines * 2 * Math.PI) / height;
       // One phosphor stripe per scanline width, three stripes per triad
@@ -345,6 +362,22 @@ type ScreenProps = {
   glitchKey?: unknown;
 } & JSX.IntrinsicElements["group"];
 
+// Screen glow cast onto the desk and casings. Screens are mostly dark with
+// green text, so the light is a dim green rather than the text colour.
+const SCREEN_LIGHT_COLOR = "#3DFF9A";
+const SCREEN_LIGHT_INTENSITY = 2;
+// Weak light right at the glass that catches the inside walls of the
+// casing's recess, brightest by the screen and fading toward the front
+const SCREEN_RECESS_LIGHT_INTENSITY = 0.2;
+// Glow each screen puts into the fog around it
+const SCREEN_FOG_COLOR = "#7fe0bf";
+const SCREEN_FOG_INTENSITY = 0.25;
+// Brightness multiplier on the screen image, so it blooms
+const SCREEN_GLOW = 2.2;
+
+// Area lights need their lookup tables registered once before first render
+RectAreaLightUniformsLib.init();
+
 const Screen = ({
   panel,
   children,
@@ -356,6 +389,49 @@ const Screen = ({
   const [scene] = useState(() => new THREE.Scene());
   const buffer = useFBO(resolution, resolution);
   const panelRef = useRef<THREE.Mesh>(null);
+  // Match the model's screen glass so the image fills the bezel opening.
+  // The glass lies flat in its local XZ plane.
+  const [panelWidth, panelHeight] = useMemo(() => {
+    panel.computeBoundingBox();
+    const box = panel.boundingBox!;
+    return [box.max.x - box.min.x, box.max.z - box.min.z];
+  }, [panel]);
+  const lightRef = useRef<THREE.RectAreaLight>(null);
+  const recessLightRef = useRef<THREE.RectAreaLight>(null);
+
+  // Give the screen the extra screen-only bloom halo
+  useLayoutEffect(() => {
+    if (!panelRef.current) return;
+    return addScreenBloomTarget(panelRef.current);
+  }, []);
+
+  // Area lights ignore scale, so size the light from the panel's world size.
+  // Also register the screen as a glow in the fog, just in front of it.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const light = lightRef.current;
+    if (!panel || !light) return;
+    const { width, height } = panelWorldSize(panel);
+    const axis = new THREE.Vector3();
+    light.width = width;
+    light.height = height;
+    if (recessLightRef.current) {
+      recessLightRef.current.width = width;
+      recessLightRef.current.height = height;
+    }
+
+    const facing = axis.setFromMatrixColumn(panel.matrixWorld, 2).normalize();
+    const center = new THREE.Vector3().setFromMatrixPosition(panel.matrixWorld);
+    return addFogLight({
+      position: center.addScaledVector(facing, 0.15),
+      color: SCREEN_FOG_COLOR,
+      // Bigger screens light more fog
+      intensity: SCREEN_FOG_INTENSITY * width * height * 4,
+      // Mostly in front of the screen, like light leaving the tube
+      direction: facing,
+      coneAngle: 1.1,
+    });
+  }, []);
 
   return (
     <group {...props}>
@@ -365,7 +441,9 @@ const Screen = ({
             <PerspectiveCamera
               makeDefault
               manual
-              aspect={1 / 1}
+              // Same shape as the glass, so content isn't stretched on
+              // non-square screens
+              aspect={panelWidth / panelHeight}
               position={[0, 0, 16]}
               {...(fov !== undefined && { fov })}
             />
@@ -380,8 +458,31 @@ const Screen = ({
         scene
       )}
       <mesh ref={panelRef} rotation={[-Math.PI / 2, 0, -Math.PI]}>
-        <planeGeometry args={[PANEL_SIZE, PANEL_SIZE]} />
-        <meshBasicMaterial toneMapped={false} map={buffer.texture} />
+        <planeGeometry args={[panelWidth, panelHeight]} />
+        {/* Pushed past 1.0 so the screens clear the bloom threshold and glow */}
+        <meshBasicMaterial
+          toneMapped={false}
+          map={buffer.texture}
+          color={[SCREEN_GLOW, SCREEN_GLOW, SCREEN_GLOW]}
+        />
+        {/* Area lights shine along -Z; turn it to face out of the screen.
+            Sits about level with the bezel: anything in front catches the
+            glow, while the casing fronts beside it stay unlit, so the light
+            reads as coming out of the screen. */}
+        <rectAreaLight
+          ref={lightRef}
+          rotation={[0, Math.PI, 0]}
+          position={[0, 0, 0.25]}
+          color={SCREEN_LIGHT_COLOR}
+          intensity={SCREEN_LIGHT_INTENSITY}
+        />
+        <rectAreaLight
+          ref={recessLightRef}
+          rotation={[0, Math.PI, 0]}
+          position={[0, 0, 0.02]}
+          color={SCREEN_LIGHT_COLOR}
+          intensity={SCREEN_RECESS_LIGHT_INTENSITY}
+        />
       </mesh>
     </group>
   );
@@ -393,7 +494,10 @@ const ScreenLoading = ({
 }: ScreenProps & { message?: string }) => {
   return (
     <Screen {...props}>
-      <color attach="background" args={[message ? "#020E09" : "#333333"]} />
+      <color
+        attach="background"
+        args={[message ? SCREEN_BACKGROUND : "#333333"]}
+      />
       {message ? (
         <Flex
           plane="xy"
@@ -404,7 +508,7 @@ const ScreenLoading = ({
           justify="center"
         >
           <Box>
-            <Text maxWidth={13} color={"#65FFBD"} textAlign="center">
+            <Text maxWidth={13} color={SCREEN_TEXT} textAlign="center">
               {message}
             </Text>
           </Box>
@@ -418,9 +522,6 @@ type ScreenTextProps = {
   quote: FullQuote;
 } & ScreenProps;
 
-
-const SCREEN_BACKGROUND = "#020E09";
-const SCREEN_TEXT = "#65FFBD";
 // Typing speed, raised for long quotes so none takes longer than the cap
 const TYPE_CHARS_PER_SECOND = 45;
 const TYPE_MAX_SECONDS = 3;
@@ -498,7 +599,7 @@ const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
 const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen glitchKey={quote.id} {...props}>
-      <color attach="background" args={["#020E09"]} />
+      <color attach="background" args={[SCREEN_BACKGROUND]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -513,7 +614,7 @@ const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
         <Box marginBottom={1}>
           <Text
             maxWidth={13}
-            color={"#65FFBD"}
+            color={SCREEN_TEXT}
             fontSize={2.5}
             textAlign="center"
           >
@@ -521,7 +622,7 @@ const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
           </Text>
         </Box>
         <Box>
-          <Text maxWidth={13} color={"#65FFBD"} fontSize={1.25} textAlign="center">
+          <Text maxWidth={13} color={SCREEN_TEXT} fontSize={1.25} textAlign="center">
             {quote.context}
           </Text>
         </Box>
@@ -533,7 +634,7 @@ const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
 const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen glitchKey={quote.id} {...props}>
-      <color attach="background" args={["#020E09"]} />
+      <color attach="background" args={[SCREEN_BACKGROUND]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -548,7 +649,7 @@ const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
         <Box>
           <Text
             maxWidth={13}
-            color={"#65FFBD"}
+            color={SCREEN_TEXT}
             fontSize={1.5}
             textAlign="center"
           >
@@ -556,7 +657,7 @@ const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
           </Text>
         </Box>
         <Box>
-          <Text maxWidth={13} color={"#65FFBD"} fontSize={2} textAlign="center">
+          <Text maxWidth={13} color={SCREEN_TEXT} fontSize={2} textAlign="center">
             {quote.date.getFullYear()}
           </Text>
         </Box>
@@ -566,9 +667,14 @@ const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
 };
 
 const LIST_ROW_HEIGHT = 3;
-const LIST_WIDTH = 11.2;
-const LIST_VISIBLE_HEIGHT = 13;
-const SCROLLBAR_X = 5.9;
+// The list sits inside a safe area of the 13×13 screen space: the lens bulge
+// and the bezel lip (the glass runs slightly under it) hide the outer edge
+const LIST_LEFT = -5.5;
+const LIST_WIDTH = 10;
+const LIST_TOP = 5.2;
+const LIST_VISIBLE_HEIGHT = 10.4;
+const LIST_BOTTOM = LIST_TOP - LIST_VISIBLE_HEIGHT;
+const SCROLLBAR_X = 5.1;
 const SCROLLBAR_W = 0.5;
 const LIST_VISIBLE_ROWS = Math.ceil(LIST_VISIBLE_HEIGHT / LIST_ROW_HEIGHT);
 const LIST_WINDOW_BUFFER = 4;
@@ -581,13 +687,13 @@ type QuoteRowProps = {
 };
 
 const QuoteRow = ({ quote, isActive, isHovered, y }: QuoteRowProps) => {
-  const bgColor = isActive ? "#0A3020" : isHovered ? "#0A3020" : "#020E09";
+  const bgColor = isActive || isHovered ? "#0F4A30" : SCREEN_BACKGROUND;
   const textColor = "#65FFBD";
   const truncated =
     quote.body.length > 48 ? quote.body.substring(0, 45) + "..." : quote.body;
 
   return (
-    <group position={[-6.5, y, 0]}>
+    <group position={[LIST_LEFT, y, 0]}>
       <mesh position={[LIST_WIDTH / 2, -(LIST_ROW_HEIGHT - 0.1) / 2, 0]}>
         <planeGeometry args={[LIST_WIDTH, LIST_ROW_HEIGHT - 0.1]} />
         <meshBasicMaterial color={bgColor} />
@@ -661,16 +767,17 @@ const QuoteListScreen = ({
   // Scroll so the active quote is visible whenever quoteIndex changes
   useEffect(() => {
     const i = quoteIndex;
-    const rowTopY = 6.0 - i * LIST_ROW_HEIGHT + scrollOffset.current;
-    const rowBottomY = 6.0 - (i + 1) * LIST_ROW_HEIGHT + scrollOffset.current;
+    const rowTopY = LIST_TOP - i * LIST_ROW_HEIGHT + scrollOffset.current;
+    const rowBottomY =
+      LIST_TOP - (i + 1) * LIST_ROW_HEIGHT + scrollOffset.current;
 
     let target = scrollOffset.current;
-    if (rowTopY > 6.2) {
+    if (rowTopY > LIST_TOP + 0.01) {
       // Row is above the viewport — snap so it appears at the top
       target = i * LIST_ROW_HEIGHT;
-    } else if (rowBottomY < -6.2) {
+    } else if (rowBottomY < LIST_BOTTOM - 0.01) {
       // Row is below the viewport — snap so it appears at the bottom
-      target = (i + 1) * LIST_ROW_HEIGHT - 12.2;
+      target = (i + 1) * LIST_ROW_HEIGHT - LIST_VISIBLE_HEIGHT;
     }
 
     scrollOffset.current = Math.max(0, Math.min(maxScroll, target));
@@ -683,7 +790,7 @@ const QuoteListScreen = ({
     if (thumbRef.current && maxScroll > 0) {
       const ratio = scrollOffset.current / maxScroll;
       thumbRef.current.position.y =
-        6.5 - thumbHeight / 2 - ratio * thumbTravel;
+        LIST_TOP - thumbHeight / 2 - ratio * thumbTravel;
     }
 
     const start = Math.max(
@@ -705,8 +812,10 @@ const QuoteListScreen = ({
     // Ignore clicks on the scrollbar column
     if (portalX > SCROLLBAR_X - SCROLLBAR_W) return null;
     const portalY = (uv.y - 0.5) * 13;
+    // Ignore clicks in the masked margins above and below the list
+    if (portalY > LIST_TOP || portalY < LIST_BOTTOM) return null;
     const contentY = portalY - scrollOffset.current;
-    const i = Math.floor((6.0 - contentY) / LIST_ROW_HEIGHT);
+    const i = Math.floor((LIST_TOP - contentY) / LIST_ROW_HEIGHT);
     return i >= 0 && i < quotes.length ? i : null;
   };
 
@@ -726,8 +835,8 @@ const QuoteListScreen = ({
           const portalY = (e.uv.y - 0.5) * 13;
           const currentThumbY =
             maxScroll > 0
-              ? 6.5 - thumbHeight / 2 - (scrollOffset.current / maxScroll) * thumbTravel
-              : 6.5 - thumbHeight / 2;
+              ? LIST_TOP - thumbHeight / 2 - (scrollOffset.current / maxScroll) * thumbTravel
+              : LIST_TOP - thumbHeight / 2;
           dragScrollbarGrabOffset.current = portalY - currentThumbY;
         } else {
           isDragging.current = "list";
@@ -746,7 +855,7 @@ const QuoteListScreen = ({
           hasDragged.current = true;
           const portalY = (e.uv.y - 0.5) * 13;
           const thumbCenter = portalY - dragScrollbarGrabOffset.current;
-          const ratio = (6.5 - thumbHeight / 2 - thumbCenter) / thumbTravel;
+          const ratio = (LIST_TOP - thumbHeight / 2 - thumbCenter) / thumbTravel;
           scrollOffset.current = Math.max(
             0,
             Math.min(maxScroll, ratio * maxScroll)
@@ -774,11 +883,11 @@ const QuoteListScreen = ({
         );
       }}
     >
-      <color attach="background" args={["#020E09"]} />
+      <color attach="background" args={[SCREEN_BACKGROUND]} />
       <ambientLight intensity={0.5} />
 
       {/* Scrollbar track */}
-      <mesh position={[SCROLLBAR_X, 0, 0]}>
+      <mesh position={[SCROLLBAR_X, LIST_TOP - LIST_VISIBLE_HEIGHT / 2, 0]}>
         <planeGeometry args={[SCROLLBAR_W, LIST_VISIBLE_HEIGHT]} />
         <meshBasicMaterial color="#0A2A1A" />
       </mesh>
@@ -786,7 +895,7 @@ const QuoteListScreen = ({
       {/* Scrollbar thumb */}
       <mesh
         ref={thumbRef}
-        position={[SCROLLBAR_X, 6.5 - thumbHeight / 2, 0.01]}
+        position={[SCROLLBAR_X, LIST_TOP - thumbHeight / 2, 0.01]}
       >
         <planeGeometry args={[SCROLLBAR_W, thumbHeight]} />
         <meshBasicMaterial color="#65FFBD" />
@@ -802,11 +911,21 @@ const QuoteListScreen = ({
               quote={quote}
               isActive={i === quoteIndex}
               isHovered={i === hoveredIndex}
-              y={6.0 - i * LIST_ROW_HEIGHT}
+              y={LIST_TOP - i * LIST_ROW_HEIGHT}
             />
           );
         })}
       </group>
+
+      {/* Background-coloured masks hide rows scrolled past the list area */}
+      <mesh position={[0, LIST_TOP + 5, 0.05]}>
+        <planeGeometry args={[20, 10]} />
+        <meshBasicMaterial color={SCREEN_BACKGROUND} />
+      </mesh>
+      <mesh position={[0, LIST_BOTTOM - 5, 0.05]}>
+        <planeGeometry args={[20, 10]} />
+        <meshBasicMaterial color={SCREEN_BACKGROUND} />
+      </mesh>
     </Screen>
   );
 };
@@ -832,7 +951,10 @@ const NavScreen = ({
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
-      <color attach="background" args={[hovered ? "#66AE8F" : "#020E09"]} />
+      <color
+        attach="background"
+        args={[hovered ? "#66AE8F" : SCREEN_BACKGROUND]}
+      />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -847,7 +969,7 @@ const NavScreen = ({
         <Box>
           <Text
             maxWidth={13}
-            color={!hovered ? "#65FFBD" : "#020E09"}
+            color={!hovered ? SCREEN_TEXT : SCREEN_BACKGROUND}
             fontSize={2}
             textAlign="center"
           >

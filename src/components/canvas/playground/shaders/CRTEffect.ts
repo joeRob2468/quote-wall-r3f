@@ -74,7 +74,7 @@ export interface CRTEffectOptions {
 export class CRTEffect extends Effect {
   constructor({
     maskTriads = 100,
-    maskStrength = 0.4,
+    maskStrength = 0.2,
     barStrength = 0.005,
     barColor = new Color('#65FFBD'),
     barSpeed = 0.2,

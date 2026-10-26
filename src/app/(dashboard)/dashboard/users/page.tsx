@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { PageHeading } from "@/components/layout/page-heading";
 import { RoleGate } from "@/components/auth/role-gate";
 import { UserRole } from "@prisma/client";
-import { columns } from "./columns";
+import { columns, rowHref } from "./columns";
 import { getSafeUsers } from "@/data/user";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default async function SettingsPage() {
         description="Manage users and configure settings."
       />
       <div className="flex flex-col py-8">
-        <DataTable columns={columns} data={users} />
+        <DataTable columns={columns} rowHref={rowHref} data={users} />
       </div>
     </RoleGate>
   );

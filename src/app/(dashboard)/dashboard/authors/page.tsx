@@ -3,7 +3,7 @@ import { DataTable } from "@/components/ui/data-table";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PageHeading } from "@/components/layout/page-heading";
-import { columns } from "./columns";
+import { columns, rowHref } from "./columns";
 import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ export default async function SettingsPage() {
         </div>
       </div>
       <div className="flex flex-col py-8">
-        <DataTable columns={columns} data={authors} />
+        <DataTable columns={columns} rowHref={rowHref} data={authors} />
       </div>
     </>
   );

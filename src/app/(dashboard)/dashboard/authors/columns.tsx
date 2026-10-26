@@ -14,6 +14,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { MoreHorizontal } from "@/components/icons";
 
+export const rowHref = (author: Author) => `/dashboard/authors/${author.id}/edit`;
+
 export const columns: ColumnDef<Author>[] = [
   {
     accessorKey: "name",
@@ -41,7 +43,7 @@ export const columns: ColumnDef<Author>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
               <Link
-                href={`/dashboard/authors/${author.id}/edit`}
+                href={rowHref(author)}
                 className="cursor-pointer"
               >
                 Edit Author

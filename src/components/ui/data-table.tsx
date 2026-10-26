@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/table";
 
 import { Button } from "./button";
+import { MouseEvent } from "react";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 // Fits two lines of text-sm plus p-4 padding, so every row is the same height
 const ROW_HEIGHT = "h-[72px]";
@@ -24,12 +27,16 @@ const ROW_HEIGHT = "h-[72px]";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  rowHref?: (row: TData) => string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TValue, TData>) {
+  rowHref,
+}: DataTableProps<TData, TValue>) {
+  const router = useRouter();
+
   const table = useReactTable({
     data,
     columns,
@@ -42,6 +49,21 @@ export function DataTable<TData, TValue>({
   // Skip padding when everything fits on one page
   const emptyRows =
     table.getPageCount() > 1 || pageIndex > 0 ? pageSize - rowCount : 0;
+
+  const onRowClick = (event: MouseEvent, row: TData) => {
+    if (!rowHref) return;
+    // Leave buttons, links and the actions menu (portaled, but its events
+    // still bubble here through React) to do their own thing
+    const target = event.target as HTMLElement;
+    if (target.closest("a, button, [role=menuitem], [role=menu]")) return;
+
+    const href = rowHref(row);
+    if (event.metaKey || event.ctrlKey) {
+      window.open(href, "_blank");
+    } else {
+      router.push(href);
+    }
+  };
 
   return (
     <>
@@ -72,6 +94,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={cn(rowHref && "cursor-pointer")}
+                  onClick={(event) => onRowClick(event, row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className={ROW_HEIGHT}>

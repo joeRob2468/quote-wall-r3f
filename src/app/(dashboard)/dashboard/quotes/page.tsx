@@ -3,7 +3,7 @@ import { DataTable } from "@/components/ui/data-table";
 import Link from "next/link";
 import { Metadata } from "next";
 import { PageHeading } from "@/components/layout/page-heading";
-import { columns } from "./columns";
+import { columns, rowHref } from "./columns";
 import { getQuotes } from "@/data/quote";
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default async function QuotesPage() {
         </div>
       </div>
       <div className="flex flex-col py-8">
-        <DataTable columns={columns} data={quotes} />
+        <DataTable columns={columns} rowHref={rowHref} data={quotes} />
       </div>
     </>
   );

@@ -15,6 +15,8 @@ import { MoreHorizontal } from "@/components/icons";
 import { SafeUser } from "@/types/user";
 import { UserRole } from "@prisma/client";
 
+export const rowHref = (user: SafeUser) => `/dashboard/users/${user.id}/edit`;
+
 export const columns: ColumnDef<SafeUser>[] = [
   {
     accessorKey: "name",
@@ -59,7 +61,7 @@ export const columns: ColumnDef<SafeUser>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
               <Link
-                href={`/dashboard/users/${user.id}/edit`}
+                href={rowHref(user)}
                 className="cursor-pointer"
               >
                 Edit User

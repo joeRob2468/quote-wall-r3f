@@ -14,6 +14,8 @@ import Link from "next/link";
 import { MoreHorizontal } from "@/components/icons";
 import { Quote } from "@prisma/client";
 
+export const rowHref = (quote: Quote) => `/dashboard/quotes/${quote.id}/edit`;
+
 export const columns: ColumnDef<Quote>[] = [
   {
     accessorKey: "body",
@@ -59,7 +61,7 @@ export const columns: ColumnDef<Quote>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
               <Link
-                href={`/dashboard/quotes/${quote.id}/edit`}
+                href={rowHref(quote)}
                 className="cursor-pointer"
               >
                 Edit Quote

@@ -23,6 +23,7 @@ const getQuotes = async (): Promise<FullQuote[] | []> => {
       include: {
         author: true,
       },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     });
     return quote;
   } catch (error) {

@@ -16,7 +16,7 @@ import {
 } from "postprocessing";
 import { Box, Flex } from "@react-three/flex";
 import { Text as DreiText, PerspectiveCamera, useFBO } from "@react-three/drei";
-import { ReactNode, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal, useFrame, useThree } from "@react-three/fiber";
 
 import { FullQuote } from "@/types/quote";
@@ -161,8 +161,11 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
 
 const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
   const { gl, camera, scene } = useThree();
+  const composerRef = useRef<EffectComposer | null>(null);
 
-  let composer = useMemo(() => {
+  // Built in an effect rather than useMemo so every composer gets disposed,
+  // including on camera changes and Strict Mode's dev remount
+  useEffect(() => {
     const composer = new EffectComposer(gl);
     composer.autoRenderToScreen = false;
 
@@ -212,13 +215,23 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
     composer.addPass(lensDistortionEffectPass);
     composer.addPass(copyPass);
 
-    return composer;
+    composerRef.current = composer;
+
+    return () => {
+      composerRef.current = null;
+      // The copy pass targets `buffer`, which useFBO owns. Take it out before
+      // disposing, or the composer would dispose the screen's texture too.
+      composer.removePass(copyPass);
+      copyPass.fullscreenMaterial.dispose();
+      composer.dispose();
+    };
   }, [gl, scene, camera, buffer]);
 
-  useFrame((state) => {
+  useFrame(() => {
+    const composer = composerRef.current;
+    if (!composer) return;
     gl.setRenderTarget(buffer);
-    if (composer) composer.render();
-    //gl.render(state.scene, state.camera);
+    composer.render();
     gl.setRenderTarget(null);
   });
 

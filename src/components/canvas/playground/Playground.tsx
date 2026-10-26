@@ -78,7 +78,6 @@ export const Playground = () => {
             bokehScale={3}
             height={700}
           />
-          <PosterizationEffect bits={9} />
           <Bloom
             luminanceThreshold={0}
             mipmapBlur
@@ -108,7 +107,14 @@ function AdaptivePixelation({
   const scaled = baseGranularity * (size.width / referenceWidth);
   const capped = Math.min(scaled, baseGranularity * MAX_PIXELATION_GRANULARITY_MULTIPLIER);
   const granularity = Math.max(1, Math.round(capped));
-  return <Pixelation granularity={granularity} />;
+  return (
+    <>
+      <Pixelation granularity={granularity} />
+      {/* After bloom and pixelation so the bands stay hard, with one dither
+          value per pixelated block */}
+      <PosterizationEffect bits={5} dither={1} pixelSize={granularity} />
+    </>
+  );
 }
 
 function CameraRig() {

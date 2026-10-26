@@ -370,3 +370,187 @@
 .scene-canvas canvas {
   image-rendering: pixelated;
 }
+
+/* Add-quote dialog (components/add-quote.tsx); its trigger reuses
+   .term-menu-trigger */
+.term-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(5 11 11 / 0.7);
+  animation: boot-fade-in 0.12s ease-out;
+}
+
+.term-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 50;
+  width: calc(100vw - 2rem);
+  max-width: 34rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  padding: 1rem 1.25rem 1.25rem;
+  font-family: "VT323", ui-monospace, monospace;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  color: var(--boot-text);
+  background: var(--boot-bg);
+  border: 1px solid var(--boot-dim);
+  box-shadow: 0 0 24px rgb(159 232 214 / 0.18);
+  text-shadow: 0 0 6px rgb(159 232 214 / 0.45);
+  animation: boot-fade-in 0.12s ease-out;
+}
+.term-dialog:focus {
+  outline: none;
+}
+
+.term-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--boot-dim);
+}
+
+.term-dialog-title {
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+.term-dialog-close {
+  color: var(--boot-dim);
+  cursor: pointer;
+}
+.term-dialog-close:hover,
+.term-dialog-close:focus-visible {
+  color: var(--boot-text);
+  outline: none;
+}
+
+.term-field {
+  display: block;
+  margin-bottom: 0.85rem;
+}
+
+.term-field-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  color: var(--boot-dim);
+}
+
+.term-dim {
+  color: var(--boot-dim);
+  opacity: 0.8;
+}
+
+.term-choice {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--boot-text);
+}
+
+.term-input {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  font: inherit;
+  color: var(--boot-text);
+  background: var(--boot-panel);
+  border: 1px solid var(--boot-dim);
+  border-radius: 0;
+  caret-color: var(--boot-text);
+  color-scheme: dark;
+  resize: vertical;
+}
+.term-input::placeholder {
+  color: var(--boot-dim);
+  opacity: 0.7;
+}
+.term-input:focus {
+  outline: none;
+  border-color: var(--boot-text);
+  box-shadow: 0 0 8px rgb(159 232 214 / 0.3);
+}
+
+.term-list {
+  max-height: 8.5rem;
+  overflow-y: auto;
+  border: 1px solid var(--boot-dim);
+  border-top: none;
+}
+
+.term-list-item {
+  display: flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+}
+.term-list-item::before {
+  content: "";
+  width: 1ch;
+  margin-right: 0.6rem;
+}
+/* The author picked so far */
+.term-list-item[data-chosen]::before {
+  content: ">";
+}
+/* cmdk marks the keyboard/pointer-highlighted item */
+.term-list-item[data-selected="true"] {
+  background: var(--boot-text);
+  color: var(--boot-bg);
+  text-shadow: none;
+}
+
+.term-list-empty {
+  padding: 0.1rem 0.5rem;
+  color: var(--boot-dim);
+}
+
+.term-error {
+  margin-bottom: 0.75rem;
+  color: #ff8a7a;
+  text-shadow: 0 0 6px rgb(255 138 122 / 0.45);
+}
+
+.term-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.term-button {
+  padding: 0.15rem 0.9rem;
+  font: inherit;
+  text-transform: uppercase;
+  color: var(--boot-text);
+  background: transparent;
+  border: 1px solid var(--boot-dim);
+  cursor: pointer;
+}
+.term-button:hover,
+.term-button:focus-visible {
+  background: var(--boot-panel);
+  border-color: var(--boot-text);
+  outline: none;
+}
+.term-button.is-primary {
+  color: var(--boot-bg);
+  background: var(--boot-text);
+  border-color: var(--boot-text);
+  text-shadow: none;
+}
+.term-button.is-primary:hover,
+.term-button.is-primary:focus-visible {
+  box-shadow: 0 0 12px rgb(159 232 214 / 0.45);
+}
+.term-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

@@ -47,6 +47,7 @@ import { addScreenBloomTarget } from "./ScreenBloom";
 import { triggerDriveBurst } from "./DriveLights";
 import { addLoadedScreen, addMountedScreen } from "./loadState";
 import { screenTapOffset } from "./pixelBlock";
+import { onShowQuote } from "./quoteSelection";
 import {
   Chevrons,
   CornerBrackets,
@@ -78,6 +79,8 @@ export const Screens = ({ nodes, materials, initialQuoteId }: ScreensProps) => {
   // keeps the same quote up. An unknown id (bad link, deleted quote) falls
   // back to the first quote.
   const [quoteId, setQuoteId] = useState(initialQuoteId);
+  // e.g. a quote just added from the dialog
+  useEffect(() => onShowQuote(setQuoteId), []);
   const quotes = data ?? [];
   const currentIndex = Math.max(
     0,

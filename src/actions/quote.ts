@@ -3,7 +3,7 @@
 import { Quote, UserRole } from "@prisma/client";
 
 import { FullQuote } from "@/types/quote";
-import { QuoteSchema } from "@/schemas/";
+import { QuickQuoteSchema, QuoteSchema } from "@/schemas/";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getAuthor } from "@/data/author";
@@ -45,6 +45,43 @@ const createQuote = async (values: z.infer<typeof QuoteSchema>) => {
     revalidatePath("/");
     return { success: "Quote created" };
   } catch (error) {
+    return { error: "Failed to create quote" };
+  }
+};
+
+// Creates a quote and, when given a name instead of an id, its new author
+// in the same write. Returns the new quote's id so the scene can show it.
+const createQuickQuote = async (values: z.infer<typeof QuickQuoteSchema>) => {
+  const sessionUser = await currentUser();
+  if (!sessionUser) {
+    return { error: "Unauthorized" };
+  }
+
+  const validatedFields = QuickQuoteSchema.safeParse(values);
+  if (!validatedFields.success) {
+    return { error: "Invalid fields" };
+  }
+
+  const { body, context, date, authorId, authorName } = validatedFields.data;
+
+  try {
+    const newQuote = await db.quote.create({
+      data: {
+        body,
+        context,
+        date,
+        author: authorId
+          ? { connect: { id: authorId } }
+          : { create: { name: authorName! } },
+      },
+      select: { id: true },
+    });
+
+    revalidatePath("/dashboard/quotes");
+    if (!authorId) revalidatePath("/dashboard/authors");
+    revalidatePath("/");
+    return { success: "Quote created", id: newQuote.id };
+  } catch {
     return { error: "Failed to create quote" };
   }
 };
@@ -117,4 +154,4 @@ const deleteQuote = async (id: Quote["id"]) => {
   }
 };
 
-export { createQuote, updateQuote, deleteQuote };
+export { createQuote, createQuickQuote, updateQuote, deleteQuote };

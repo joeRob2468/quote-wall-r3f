@@ -134,7 +134,7 @@ export const Playground = ({ initialQuoteId }: PlaygroundProps) => {
           {/* Cool blue lift in the shadows; after bloom so the haze is graded
             too, before posterize so the bands come from graded colours */}
           <ColorGrade shadowTint="#1a4a5c" shadowStrength={0.02} contrast={0.5} />
-          <BlockResolution />
+          <ScreenTaps />
           {/* After bloom so the bands stay hard; one buffer pixel is one
             pixelated block, so one dither value each */}
           <PosterizationEffect bits={5} dither={1} />
@@ -179,22 +179,16 @@ function SceneReady() {
   return null;
 }
 
-// Renders at one pixel per pixelation block (see pixelBlock.ts)
-function BlockResolution() {
+// Screens sample four times per pixel when a pixel is a whole block (see
+// screenTapOffset)
+function ScreenTaps() {
   const block = usePixelBlock();
-  const setDpr = useThree((state) => state.setDpr);
-  // The pixel ratio the canvas would otherwise render at
-  const initialDpr = useThree((state) => state.viewport.initialDpr);
-
   useEffect(() => {
-    setDpr(initialDpr / block);
     screenTapOffset.value = block > 1 ? 0.25 : 0;
     return () => {
-      setDpr(initialDpr);
       screenTapOffset.value = 0;
     };
-  }, [setDpr, initialDpr, block]);
-
+  }, [block]);
   return null;
 }
 

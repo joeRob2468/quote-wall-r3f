@@ -4,7 +4,8 @@ import { useThree } from "@react-three/fiber";
 // The scene is pixelated by rendering it at one pixel per block and letting
 // the canvas upscale with hard edges (image-rendering: pixelated, see
 // globals.css). It used to render every pixel and average blocks down in a
-// pass, which shaded each block four times over.
+// pass, which shaded each block four times over. The canvas's pixel ratio
+// is set from blockPixelRatio in canvas/Layout.tsx.
 
 // Block size at REFERENCE_WIDTH, in render pixels at the canvas's normal
 // pixel ratio; scaled with the canvas width, rounded, and capped there
@@ -12,10 +13,22 @@ const BASE_BLOCK = 2;
 const REFERENCE_WIDTH = 1920;
 const MAX_BLOCK = 2;
 
-export const usePixelBlock = () => {
-  const width = useThree((state) => state.size.width);
+// Pixel ratio the scene would render at without the blocks
+const MAX_BASE_PIXEL_RATIO = 1.5;
+
+const pixelBlockFor = (width: number) => {
   const scaled = BASE_BLOCK * (width / REFERENCE_WIDTH);
   return Math.max(1, Math.min(MAX_BLOCK, Math.round(scaled)));
+};
+
+// Block size for the canvas, from inside it
+export const usePixelBlock = () =>
+  pixelBlockFor(useThree((state) => state.size.width));
+
+// Pixel ratio that renders one pixel per block, for a full-window canvas
+export const blockPixelRatio = () => {
+  const base = Math.min(Math.max(window.devicePixelRatio, 1), MAX_BASE_PIXEL_RATIO);
+  return base / pixelBlockFor(window.innerWidth);
 };
 
 // Bloom's mip chain starts at half the size of its input. At block

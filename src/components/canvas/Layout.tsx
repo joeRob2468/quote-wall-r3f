@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
+import { blockPixelRatio } from "@/components/canvas/playground/pixelBlock";
 import dynamic from "next/dynamic";
-import { useRef } from "react";
 const Scene = dynamic(() => import("@/components/canvas/Scene"), {
   ssr: false,
 });
@@ -11,6 +13,19 @@ interface LayoutProps {
 }
 const Layout = ({ children }: LayoutProps) => {
   const ref = useRef(null!);
+
+  // Given as the Canvas prop rather than set from inside the scene: the
+  // Canvas re-applies its dpr prop whenever it re-renders (e.g. after a
+  // server action), which reset the scene to full resolution. The scene is
+  // client-only, so the server's placeholder value is never used.
+  const [dpr, setDpr] = useState(() =>
+    typeof window === "undefined" ? 1 : blockPixelRatio()
+  );
+  useEffect(() => {
+    const update = () => setDpr(blockPixelRatio());
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   return (
     <div
@@ -29,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
         eventSource={ref}
         eventPrefix="client"
         shadows="soft"
-        dpr={[1, 1.5]}
+        dpr={dpr}
       />
     </div>
   );

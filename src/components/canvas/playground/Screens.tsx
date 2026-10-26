@@ -373,7 +373,7 @@ const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
             fontSize={1.5}
             textAlign="center"
           >
-            {`${quote.date.toLocaleString("default", { month: "long" })} ${quote.date.getDay() + 1}`}
+            {`${quote.date.toLocaleString("default", { month: "long" })} ${quote.date.getDate()}`}
           </Text>
         </Box>
         <Box>

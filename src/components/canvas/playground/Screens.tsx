@@ -419,10 +419,61 @@ type ScreenTextProps = {
 } & ScreenProps;
 
 
+const SCREEN_BACKGROUND = "#020E09";
+const SCREEN_TEXT = "#65FFBD";
+// Typing speed, raised for long quotes so none takes longer than the cap
+const TYPE_CHARS_PER_SECOND = 45;
+const TYPE_MAX_SECONDS = 3;
+const CURSOR_BLINK_SECONDS = 0.5;
+const CURSOR = "_";
+const NBSP = "\u00A0";
+
+// What the main screen shows after `chars` characters have been typed.
+// The font is monospaced, so swapping untyped characters for non-breaking
+// spaces (which troika won't wrap at) keeps every word the same width and
+// the layout identical to the finished quote; the cursor is swapped in the
+// same way. A trailing " _" slot holds the cursor once typing is done.
+const typedText = (body: string, chars: number, cursorOn: boolean) => {
+  if (chars >= body.length) {
+    return `${body} ${cursorOn ? CURSOR : NBSP}`;
+  }
+
+  const rest = Array.from(body.slice(chars), (char) =>
+    /\s/.test(char) ? char : NBSP
+  );
+  // Put the cursor on the next visible character; replacing whitespace
+  // would join words and change where lines wrap
+  const cursorAt = rest.findIndex((char) => char === NBSP);
+  if (cursorOn && cursorAt !== -1) rest[cursorAt] = CURSOR;
+
+  return `${body.slice(0, chars)}${rest.join("")} ${NBSP}`;
+};
+
 const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
+  const [typed, setTyped] = useState({ chars: 0, cursorOn: true });
+  const elapsed = useRef(0);
+
+  useEffect(() => {
+    elapsed.current = 0;
+    setTyped({ chars: 0, cursorOn: true });
+  }, [quote.id]);
+
+  const length = quote.body.length;
+  const speed = Math.max(TYPE_CHARS_PER_SECOND, length / TYPE_MAX_SECONDS);
+
+  useFrame((_, delta) => {
+    elapsed.current += delta;
+    const chars = Math.min(length, Math.floor(elapsed.current * speed));
+    const cursorOn =
+      Math.floor(elapsed.current / CURSOR_BLINK_SECONDS) % 2 === 0;
+    if (chars !== typed.chars || cursorOn !== typed.cursorOn) {
+      setTyped({ chars, cursorOn });
+    }
+  });
+
   return (
     <Screen resolution={1024} glitchKey={quote.id} {...props}>
-      <color attach="background" args={["#020E09"]} />
+      <color attach="background" args={[SCREEN_BACKGROUND]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
       <Flex
@@ -435,8 +486,8 @@ const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
         wrap="wrap"
       >
         <Box>
-          <Text maxWidth={13} color={"#65FFBD"} textAlign="center">
-            {quote.body}
+          <Text maxWidth={13} color={SCREEN_TEXT} textAlign="center">
+            {typedText(quote.body, typed.chars, typed.cursorOn)}
           </Text>
         </Box>
       </Flex>

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 
 import { Button } from "./button";
-import { MouseEvent } from "react";
+import { KeyboardEvent, MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -98,12 +98,14 @@ export function DataTable<TData, TValue>({
   const emptyRows =
     table.getPageCount() > 1 || pageIndex > 0 ? pageSize - rowCount : 0;
 
-  const onRowClick = (event: MouseEvent, row: TData) => {
+  const openRow = (
+    event: MouseEvent | KeyboardEvent,
+    row: TData
+  ) => {
     if (!rowHref) return;
-    // Leave buttons, links and the actions menu (portaled, but its events
-    // still bubble here through React) to do their own thing
+    // Leave any buttons or links inside a cell to do their own thing
     const target = event.target as HTMLElement;
-    if (target.closest("a, button, [role=menuitem], [role=menu]")) return;
+    if (target !== event.currentTarget && target.closest("a, button")) return;
 
     const href = rowHref(row);
     if (event.metaKey || event.ctrlKey) {
@@ -145,8 +147,17 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={cn(rowHref && "cursor-pointer")}
-                  onClick={(event) => onRowClick(event, row.original)}
+                  className={cn(
+                    rowHref &&
+                      "cursor-pointer focus-visible:bg-muted focus-visible:outline-none"
+                  )}
+                  // Rows are focusable so keyboard users can Tab to one and
+                  // press Enter to open it
+                  tabIndex={rowHref ? 0 : undefined}
+                  onClick={(event) => openRow(event, row.original)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") openRow(event, row.original);
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

@@ -38,14 +38,12 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
   const [quoteIndex, setQuoteIndex] = useState<number>(0);
 
   const showPreviousQuote = () => {
-    console.log("showPreviousQuote", quoteIndex);
-    setQuoteIndex((prev) => (prev <= 0 ? 0 : prev - 1));
+    if (!data?.length) return;
+    setQuoteIndex((prev) => (prev <= 0 ? data.length - 1 : prev - 1));
   };
   const showNextQuote = () => {
-    console.log("showNextQuote", quoteIndex);
-    setQuoteIndex((prev) =>
-      prev === (!!data && data.length - 1) ? 0 : prev + 1
-    );
+    if (!data?.length) return;
+    setQuoteIndex((prev) => (prev >= data.length - 1 ? 0 : prev + 1));
   };
   const showRandomQuote = () => {
     if (!data || data.length <= 1) return;

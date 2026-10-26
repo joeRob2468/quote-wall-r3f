@@ -228,9 +228,10 @@ const ScreenRenderer = ({ buffer }: { buffer: THREE.WebGLRenderTarget }) => {
 type ScreenProps = {
   panel: THREE.BufferGeometry<THREE.NormalBufferAttributes>;
   children?: ReactNode;
+  fov?: number;
 } & JSX.IntrinsicElements["group"];
 
-const Screen = ({ panel, children, ...props }: ScreenProps) => {
+const Screen = ({ panel, children, fov, ...props }: ScreenProps) => {
   const [scene] = useState(() => new THREE.Scene());
   const buffer = useFBO(512, 512);
 
@@ -244,6 +245,7 @@ const Screen = ({ panel, children, ...props }: ScreenProps) => {
               manual
               aspect={1 / 1}
               position={[0, 0, 16]}
+              {...(fov !== undefined && { fov })}
             />
             {children}
             <ScreenRenderer buffer={buffer} />
@@ -276,12 +278,6 @@ type ScreenTextProps = {
 const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
-      <PerspectiveCamera
-        makeDefault
-        manual
-        aspect={1 / 1}
-        position={[0, 0, 16]}
-      />
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
@@ -307,12 +303,6 @@ const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
 const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
-      <PerspectiveCamera
-        makeDefault
-        manual
-        aspect={1 / 1}
-        position={[0, 0, 16]}
-      />
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
@@ -348,12 +338,6 @@ const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
 const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
   return (
     <Screen {...props}>
-      <PerspectiveCamera
-        makeDefault
-        manual
-        aspect={1 / 1}
-        position={[0, 0, 16]}
-      />
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
@@ -537,6 +521,8 @@ const QuoteListScreen = ({
   return (
     <Screen
       {...props}
+      // Tighter FOV so items outside the 13×13 area are naturally clipped
+      fov={44}
       onPointerDown={(e) => {
         if (!e.uv) return;
         hasDragged.current = false;
@@ -593,8 +579,6 @@ const QuoteListScreen = ({
         );
       }}
     >
-      {/* Tighter FOV so items outside the 13×13 area are naturally clipped */}
-      <PerspectiveCamera makeDefault manual aspect={1 / 1} fov={44} position={[0, 0, 16]} />
       <color attach="background" args={["#020E09"]} />
       <ambientLight intensity={0.5} />
 
@@ -653,12 +637,6 @@ const NavScreen = ({
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
-      <PerspectiveCamera
-        makeDefault
-        manual
-        aspect={1 / 1}
-        position={[0, 0, 16]}
-      />
       <color attach="background" args={[hovered ? "#66AE8F" : "#020E09"]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />

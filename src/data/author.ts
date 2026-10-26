@@ -9,7 +9,8 @@ const getAuthor = async (id: string): Promise<Author | null> => {
   try {
     const author = await db.author.findUnique({ where: { id } });
     return author;
-  } catch {
+  } catch (error) {
+    console.error(`Failed to load author ${id}:`, error);
     return null;
   }
 };
@@ -18,7 +19,8 @@ const getAuthors = async (): Promise<Author[]> => {
   try {
     const authors = await db.author.findMany();
     return authors;
-  } catch {
+  } catch (error) {
+    console.error("Failed to load authors:", error);
     return [];
   }
 };
@@ -38,6 +40,7 @@ const getAuthorWithUser = async (
 
     return author;
   } catch (error) {
+    console.error(`Failed to load author ${id}:`, error);
     return null;
   }
 };

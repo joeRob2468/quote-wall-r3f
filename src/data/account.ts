@@ -9,7 +9,8 @@ export const getAccountByUserId = async (userId: string) => {
     });
 
     return account;
-  } catch {
+  } catch (error) {
+    console.error(`Failed to load account for user ${userId}:`, error);
     return null;
   }
 };

@@ -17,7 +17,12 @@ import { Model } from "./Model";
 import { ScreenBloom } from "./ScreenBloom";
 import { LedClock } from "./LedClock";
 import { Smoke } from "./Smoke";
-import { addFogLight, fogTime, installDriftingFog } from "./driftingFog";
+import {
+  addFogLight,
+  fogTime,
+  installDriftingFog,
+  updateFogLights,
+} from "./driftingFog";
 import ColorGrade from "./shaders/ColorGradeEffect";
 import PosterizationEffect from "./shaders/PosterizationEffect";
 import {
@@ -277,10 +282,11 @@ function LampSpot() {
   );
 }
 
-// Advances the drifting fog's noise
+// Advances the drifting fog's noise and applies fog lights' live levels
 function FogDrift() {
   useFrame((_, delta) => {
     fogTime.value += delta;
+    updateFogLights();
   });
   return null;
 }

@@ -2,7 +2,12 @@
 
 import * as THREE from "three";
 
-import { LED_BRIGHTNESS, LED_COLOR, fadeToward } from "./IndicatorLights";
+import {
+  LED_BRIGHTNESS,
+  LED_COLOR,
+  fadeToward,
+  makeFlicker,
+} from "./IndicatorLights";
 import { useMemo, useRef } from "react";
 
 import { useFrame } from "@react-three/fiber";
@@ -67,29 +72,6 @@ const makeActivity = () => {
       nextToggle = t + 0.02 + Math.random() * 0.07;
     }
     return lit;
-  };
-};
-
-// Power light that stays on, dropping out briefly now and then (sometimes
-// twice in quick succession), on its own random schedule
-const makeFlicker = () => {
-  let nextFlicker = 2 + Math.random() * 10;
-  let offUntil = 0;
-  let pendingDouble = false;
-  return (t: number) => {
-    if (t >= nextFlicker) {
-      offUntil = t + 0.05 + Math.random() * 0.12;
-      if (pendingDouble) {
-        pendingDouble = false;
-        nextFlicker = t + 4 + Math.random() * 10;
-      } else {
-        pendingDouble = Math.random() < 0.35;
-        nextFlicker = pendingDouble
-          ? offUntil + 0.08 + Math.random() * 0.1
-          : t + 4 + Math.random() * 10;
-      }
-    }
-    return t < offUntil ? 0.08 : 1;
   };
 };
 

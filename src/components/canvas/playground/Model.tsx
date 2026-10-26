@@ -172,6 +172,12 @@ export function Model({ lampOn = true, ...props }: ModelProps) {
     }
     return copy
   }, [materials, lampOn])
+  // The shade's inside is also emissive in the model; dark when the lamp is off
+  const shadeInner = useMemo(() => {
+    const copy = materials['Material.020'].clone()
+    if (!lampOn) copy.emissive.set('#000000')
+    return copy
+  }, [materials, lampOn])
   // Recorder gauges: soft warm backlight, bright enough to bloom a little
   const gauges = useMemo(() => {
     const copy = materials['Material.013'].clone()
@@ -194,7 +200,7 @@ export function Model({ lampOn = true, ...props }: ModelProps) {
         <mesh name="LampModel_2" castShadow receiveShadow geometry={nodes.LampModel_2.geometry}>
           <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.3} />
         </mesh>
-        <mesh name="LampModel_3" castShadow receiveShadow geometry={nodes.LampModel_3.geometry} material={materials['Material.020']} />
+        <mesh name="LampModel_3" castShadow receiveShadow geometry={nodes.LampModel_3.geometry} material={shadeInner} />
         <mesh name="LampModel_4" castShadow receiveShadow geometry={nodes.LampModel_4.geometry} material={materials['Material.001']} />
         <mesh name="LampModel_5" castShadow receiveShadow geometry={nodes.LampModel_5.geometry} material={materials['Material.010']} />
       </group>

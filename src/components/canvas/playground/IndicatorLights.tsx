@@ -8,7 +8,8 @@ import { useFrame } from "@react-three/fiber";
 
 // The little red power LEDs on the monitor casings. Drawn unlit and brighter
 // than 1.0 so they bloom, each with a small red point light so they cast a
-// faint glow onto the casing and desk around them. A couple of them blink.
+// faint glow onto the casing and desk around them. Each one is mostly on,
+// with occasional brief flickers.
 
 export const LED_COLOR = new THREE.Color("#ff1a1a");
 export const LED_BRIGHTNESS = 2.6;
@@ -22,35 +23,50 @@ const LED_LIGHT_DISTANCE = 0.8;
 // as a second red dot beside the LED instead of on top of it.
 const LED_LIGHT_OFFSET = 0.03;
 
-// Blink pattern: seconds per cycle, fraction of the cycle spent on, and
-// offset into the cycle. null = steady.
-type Blink = { period: number; on: number; phase: number } | null;
+// Power light that stays on, dropping out briefly now and then (sometimes
+// twice in quick succession), on its own random schedule. `gap` is the
+// [min, max] seconds between flickers.
+export const makeFlicker = (gap: [number, number] = [4, 14]) => {
+  const nextGap = () => gap[0] + Math.random() * (gap[1] - gap[0]);
+  let nextFlicker = nextGap();
+  let offUntil = 0;
+  let pendingDouble = false;
+  return (t: number) => {
+    if (t >= nextFlicker) {
+      offUntil = t + 0.05 + Math.random() * 0.12;
+      if (pendingDouble) {
+        pendingDouble = false;
+        nextFlicker = t + nextGap();
+      } else {
+        pendingDouble = Math.random() < 0.35;
+        nextFlicker = pendingDouble
+          ? offUntil + 0.08 + Math.random() * 0.1
+          : t + nextGap();
+      }
+    }
+    return t < offUntil ? 0.08 : 1;
+  };
+};
 
-// Brightness (1 = on) of a blinking light at time t
-const blinkLevel = (t: number, blink: Blink) =>
-  !blink || (t / blink.period + blink.phase) % 1 < blink.on ? 1 : 0.08;
-
-const MONITOR_BLINK = { period: 1.4, on: 0.5, phase: 0 };
+// Monitor power LEDs flicker more often than the cabinet buttons
+const MONITOR_FLICKER_GAP: [number, number] = [2, 7];
 
 // Seconds for an indicator to fade fully on or off, instead of snapping
 const FADE_SECONDS = 0.15;
 
 // Moves a light's level toward its target at the fade rate
-export const fadeToward = (level: number, target: number, delta: number) => {
-  const step = delta / FADE_SECONDS;
+export const fadeToward = (
+  level: number,
+  target: number,
+  delta: number,
+  seconds = FADE_SECONDS
+) => {
+  const step = delta / seconds;
   return level < target
     ? Math.min(target, level + step)
     : Math.max(target, level - step);
 };
 
-const BLINKS: Blink[] = [
-  null,
-  MONITOR_BLINK,
-  null,
-  null,
-  { period: 2.3, on: 0.15, phase: 0.6 },
-  null,
-];
 
 type IndicatorLightsProps = {
   geometry: THREE.BufferGeometry;
@@ -86,6 +102,10 @@ export const IndicatorLights = ({
   const color = useMemo(() => new THREE.Color(), []);
 
   const levels = useRef<number[]>([]);
+  const flickers = useMemo(
+    () => Array.from({ length: count }, () => makeFlicker(MONITOR_FLICKER_GAP)),
+    [count]
+  );
 
   useFrame(({ clock }, delta) => {
     const mesh = meshRef.current;
@@ -94,7 +114,7 @@ export const IndicatorLights = ({
     for (let i = 0; i < count; i++) {
       const level = fadeToward(
         levels.current[i] ?? 1,
-        blinkLevel(t, BLINKS[i % BLINKS.length]),
+        flickers[i](t),
         delta
       );
       levels.current[i] = level;

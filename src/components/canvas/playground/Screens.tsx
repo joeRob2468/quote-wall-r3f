@@ -40,6 +40,17 @@ import Text, {
 import { addFogLight } from "./driftingFog";
 import { addScreenBloomTarget } from "./ScreenBloom";
 import { triggerDriveBurst } from "./DriveLights";
+import {
+  Chevrons,
+  CornerBrackets,
+  Rect,
+  TermText,
+  MarchingBorder,
+  Uptime,
+  Waveform,
+  useDecrypt,
+  useFlickerLevel,
+} from "./TerminalDecor";
 import { getQuotes } from "@/data/quote";
 import { useQuery } from "@tanstack/react-query";
 
@@ -71,13 +82,15 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
     if (!data?.length) return;
     setQuoteIndex((prev) => (prev >= data.length - 1 ? 0 : prev + 1));
   };
+  // Returns the index it picked, so the Random screen can show it
   const showRandomQuote = () => {
-    if (!data || data.length <= 1) return;
+    if (!data || data.length <= 1) return null;
     let next: number;
     do {
       next = Math.floor(Math.random() * data.length);
     } while (next === quoteIndex);
     setQuoteIndex(next);
+    return next;
   };
 
   // getQuotes returns [] when the database query fails, so an empty list
@@ -142,6 +155,8 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Center large screen */}
       <MainQuoteScreen
         quote={currentQuote}
+        index={currentIndex}
+        total={data.length}
         panel={nodes.Large_Monitor_Screen.geometry}
         position={[0.678, 7.601, 2.569]}
         rotation={[-Math.PI / 2, 0, -0.088]}
@@ -150,6 +165,10 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Bottom left nav screen */}
       <NavScreen
         label="Previous"
+        direction="left"
+        keyHint={pad3(
+          ((currentIndex - 1 + data.length) % data.length) + 1
+        )}
         clickEventHandler={showPreviousQuote}
         panel={nodes.Small_Monitor_Screen.geometry}
         position={[3.746, 6.591, 2.599]}
@@ -163,9 +182,9 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
         rotation={[-Math.PI / 2, 0, 0.049]}
       />
       {/* Top center small screen — random nav */}
-      <NavScreen
-        label="✨Random"
-        clickEventHandler={showRandomQuote}
+      <RandomScreen
+        total={data.length}
+        onRandom={showRandomQuote}
         panel={nodes.Small_Monitor_Screen002.geometry}
         position={[1.455, 10.681, 2.422]}
         rotation={[-Math.PI / 2, 0, 0]}
@@ -183,6 +202,8 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Bottom Right nav screen */}
       <NavScreen
         label="Next"
+        direction="right"
+        keyHint={pad3(((currentIndex + 1) % data.length) + 1)}
         clickEventHandler={showNextQuote}
         panel={nodes.Small_Monitor_Screen004.geometry}
         position={[-2.387, 6.673, 1.923]}
@@ -191,6 +212,8 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       {/* Top right small screen */}
       <MetaScreen
         quote={currentQuote}
+        index={currentIndex}
+        total={data.length}
         panel={nodes.Small_Monitor_Screen005.geometry}
         position={[-2.345, 8.876, 1.829]}
         rotation={[-Math.PI / 2, 0, -0.257]}
@@ -268,7 +291,9 @@ const ScreenRenderer = ({
     );
 
     const glitchEffect = new GlitchEffect({
-      delay: new THREE.Vector2(1.0, 10.0),
+      // Seconds between random glitches; kept rare now that the screens
+      // also flicker
+      delay: new THREE.Vector2(10.0, 30.0),
       duration: new THREE.Vector2(0.1, 0.5),
       strength: new THREE.Vector2(0.3, 0.75),
       ratio: 0.45,
@@ -384,6 +409,9 @@ const SCREEN_LIGHT_INTENSITY = 2;
 // Weak light right at the glass that catches the inside walls of the
 // casing's recess, brightest by the screen and fading toward the front
 const SCREEN_RECESS_LIGHT_INTENSITY = 0.2;
+// How much harder the cast light (area lights, fog glow) dips than the
+// screen image during a flicker, so the room visibly dims with it
+const SCREEN_LIGHT_DIP_GAIN = 1.8;
 // Glow each screen puts into the fog around it
 const SCREEN_FOG_COLOR = "#9fe0d8";
 const SCREEN_FOG_INTENSITY = 0.25;
@@ -404,6 +432,28 @@ const Screen = ({
   const [scene] = useState(() => new THREE.Scene());
   const buffer = useFBO(resolution, resolution);
   const panelRef = useRef<THREE.Mesh>(null);
+  const panelMaterial = useRef<THREE.MeshBasicMaterial>(null);
+  const lightRef = useRef<THREE.RectAreaLight>(null);
+  const recessLightRef = useRef<THREE.RectAreaLight>(null);
+
+  // Whole-screen brightness dips now and then, like an unsteady CRT. The
+  // light the screen gives off (area lights, fog glow) dips with it.
+  const brightness = useFlickerLevel({ depth: 0.5, minGap: 4, maxGap: 16 });
+  const lightLevel = useRef(1);
+  useFrame(() => {
+    panelMaterial.current?.color.setScalar(SCREEN_GLOW * brightness.current);
+    lightLevel.current = Math.max(
+      0.05,
+      1 - (1 - brightness.current) * SCREEN_LIGHT_DIP_GAIN
+    );
+    if (lightRef.current) {
+      lightRef.current.intensity = SCREEN_LIGHT_INTENSITY * lightLevel.current;
+    }
+    if (recessLightRef.current) {
+      recessLightRef.current.intensity =
+        SCREEN_RECESS_LIGHT_INTENSITY * lightLevel.current;
+    }
+  });
   // Match the model's screen glass so the image fills the bezel opening.
   // The glass lies flat in its local XZ plane.
   const [panelWidth, panelHeight] = useMemo(() => {
@@ -411,8 +461,6 @@ const Screen = ({
     const box = panel.boundingBox!;
     return [box.max.x - box.min.x, box.max.z - box.min.z];
   }, [panel]);
-  const lightRef = useRef<THREE.RectAreaLight>(null);
-  const recessLightRef = useRef<THREE.RectAreaLight>(null);
 
   // Give the screen the extra screen-only bloom halo
   useLayoutEffect(() => {
@@ -445,6 +493,7 @@ const Screen = ({
       // Mostly in front of the screen, like light leaving the tube
       direction: facing,
       coneAngle: 1.1,
+      level: lightLevel,
     });
   }, []);
 
@@ -476,6 +525,7 @@ const Screen = ({
         <planeGeometry args={[panelWidth, panelHeight]} />
         {/* Pushed past 1.0 so the screens clear the bloom threshold and glow */}
         <meshBasicMaterial
+          ref={panelMaterial}
           toneMapped={false}
           map={buffer.texture}
           color={[SCREEN_GLOW, SCREEN_GLOW, SCREEN_GLOW]}
@@ -565,7 +615,26 @@ const typedText = (body: string, chars: number, cursorOn: boolean) => {
   return `${body.slice(0, chars)}${rest.join("")} ${NBSP}`;
 };
 
-const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
+// Dim teal for terminal chrome (bars, rules, brackets) so it frames the
+// content without competing with it
+const SCREEN_CHROME = "#2c6b62";
+const SCREEN_CHROME_DIM = "#1d4a44";
+// Secondary text (key hints): readable, but quieter than SCREEN_TEXT
+const SCREEN_TEXT_DIM = "#5f9f92";
+
+const pad3 = (n: number) => n.toString().padStart(3, "0");
+
+type MainQuoteScreenProps = ScreenTextProps & {
+  index: number;
+  total: number;
+};
+
+const MainQuoteScreen = ({
+  quote,
+  index,
+  total,
+  ...props
+}: MainQuoteScreenProps) => {
   const [typed, setTyped] = useState({ chars: 0, cursorOn: true });
   const elapsed = useRef(0);
 
@@ -573,6 +642,9 @@ const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
     elapsed.current = 0;
     setTyped({ chars: 0, cursorOn: true });
   }, [quote.id]);
+
+  // The title bar and rules flicker together, separately from the screen
+  const chromeLevel = useFlickerLevel({ depth: 0.7 });
 
   const length = quote.body.length;
   const speed = Math.max(TYPE_CHARS_PER_SECOND, length / TYPE_MAX_SECONDS);
@@ -592,91 +664,208 @@ const MainQuoteScreen = ({ quote, ...props }: ScreenTextProps) => {
       <color attach="background" args={[SCREEN_BACKGROUND]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} />
+      {/* Title bar */}
+      <Rect
+        position={[0, 4.6]}
+        size={[10.6, 0.9]}
+        color={SCREEN_CHROME}
+        level={chromeLevel}
+      />
+      <TermText position={[-5, 4.6]} size={0.55} color={SCREEN_TEXT}>
+        QUOTE.DAT
+      </TermText>
+      <TermText
+        position={[5, 4.6]}
+        size={0.55}
+        color={SCREEN_TEXT}
+        anchorX="right"
+      >
+        {`REC ${pad3(index + 1)}/${pad3(total)}`}
+      </TermText>
+      <Rect
+        position={[0, 3.85]}
+        size={[10.6, 0.06]}
+        color={SCREEN_CHROME}
+        level={chromeLevel}
+      />
+
+      {/* Quote, kept clear of the bars */}
       <Flex
         plane="xy"
-        size={[13, 13, 0]}
-        position={[-13 / 2, 13 / 2, 0]}
+        size={[13, 7.4, 0]}
+        position={[-13 / 2, 7.4 / 2, 0]}
         flexDirection="column"
         align="center"
         justify="center"
         wrap="wrap"
       >
         <Box>
-          <Text maxWidth={13} color={SCREEN_TEXT} textAlign="center">
+          <Text maxWidth={10} color={SCREEN_TEXT} textAlign="center">
             {typedText(quote.body, typed.chars, typed.cursorOn)}
           </Text>
         </Box>
       </Flex>
+
+      {/* Status line */}
+      <Rect
+        position={[0, -3.85]}
+        size={[10.6, 0.06]}
+        color={SCREEN_CHROME}
+        level={chromeLevel}
+      />
+      <TermText position={[-5, -4.5]} size={0.55} color={SCREEN_TEXT}>
+        {"> READY"}
+      </TermText>
+      <Uptime position={[5, -4.5]} size={0.55} color={SCREEN_TEXT} anchorX="right" />
     </Screen>
   );
 };
 
-const MetaScreen = ({ quote, ...props }: ScreenTextProps) => {
+type MetaScreenProps = ScreenTextProps & {
+  index: number;
+  total: number;
+};
+
+const MetaScreen = ({ quote, index, total, ...props }: MetaScreenProps) => {
+  const chromeLevel = useFlickerLevel({ depth: 0.7 });
   return (
     <Screen glitchKey={quote.id} {...props}>
       <color attach="background" args={[SCREEN_BACKGROUND]} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} />
-      <Flex
-        plane="xy"
-        size={[13, 13, 0]}
-        position={[-13 / 2, 13 / 2, 0]}
-        flexDirection="column"
-        align="center"
-        justify="center"
-        wrap="wrap"
+
+      {/* Title bar */}
+      <Rect
+        position={[0, 4.4]}
+        size={[10.4, 1.2]}
+        color={SCREEN_CHROME}
+        level={chromeLevel}
+      />
+      <TermText position={[-4.9, 4.4]} size={0.9} color={SCREEN_TEXT}>
+        SPEAKER
+      </TermText>
+      <TermText
+        position={[4.9, 4.4]}
+        size={0.9}
+        color={SCREEN_TEXT}
+        anchorX="right"
       >
-        <Box marginBottom={1}>
-          <Text
-            maxWidth={13}
-            color={SCREEN_TEXT}
-            fontSize={2.5}
-            textAlign="center"
-          >
-            {quote.author.name}
-          </Text>
-        </Box>
-        <Box>
-          <Text maxWidth={13} color={SCREEN_TEXT} fontSize={1.25} textAlign="center">
-            {quote.context}
-          </Text>
-        </Box>
-      </Flex>
+        {`${pad3(index + 1)}/${pad3(total)}`}
+      </TermText>
+
+      <TermText
+        position={[0, 1.6]}
+        size={2.1}
+        color={SCREEN_TEXT}
+        anchorX="center"
+        maxWidth={10}
+      >
+        {quote.author.name}
+      </TermText>
+      {quote.context ? (
+        <TermText
+          position={[0, 0]}
+          size={0.85}
+          color={SCREEN_TEXT_DIM}
+          anchorX="center"
+          anchorY="top"
+          maxWidth={10}
+        >
+          {quote.context}
+        </TermText>
+      ) : null}
+
+      {/* Voiceprint, which spikes whenever the quote changes */}
+      <Waveform
+        burstKey={quote.id}
+        y={-3.4}
+        width={9.6}
+        maxHeight={2.6}
+        color={SCREEN_TEXT_DIM}
+      />
     </Screen>
   );
 };
+
+const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+const pad2 = (n: number) => n.toString().padStart(2, "0");
+
+const dayOfYear = (date: Date) =>
+  Math.floor(
+    (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
+      Date.UTC(date.getFullYear(), 0, 0)) /
+      86_400_000
+  );
 
 const DateScreen = ({ quote, ...props }: ScreenTextProps) => {
+  const chromeLevel = useFlickerLevel({ depth: 0.7 });
+  const date = quote.date;
+  const weekday = date.getDay();
+  // Dates picked from the calendar are stored at midnight, meaning "no
+  // time recorded"
+  const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
+  const time = hasTime
+    ? `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+    : "--:--";
+
   return (
     <Screen glitchKey={quote.id} {...props}>
       <color attach="background" args={[SCREEN_BACKGROUND]} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} />
-      <Flex
-        plane="xy"
-        size={[13, 13, 0]}
-        position={[-13 / 2, 13 / 2, 0]}
-        flexDirection="column"
-        align="center"
-        justify="center"
-        wrap="wrap"
-      >
-        <Box>
-          <Text
-            maxWidth={13}
-            color={SCREEN_TEXT}
-            fontSize={1.5}
-            textAlign="center"
-          >
-            {`${quote.date.toLocaleString("default", { month: "long" })} ${quote.date.getDate()}`}
-          </Text>
-        </Box>
-        <Box>
-          <Text maxWidth={13} color={SCREEN_TEXT} fontSize={2} textAlign="center">
-            {quote.date.getFullYear()}
-          </Text>
-        </Box>
-      </Flex>
+
+      {/* Week strip with the quote's day lit */}
+      {WEEKDAYS.map((day, i) => {
+        const x = (i - 3) * 1.45;
+        const lit = i === weekday;
+        return (
+          <group key={day}>
+            {lit && (
+              <Rect
+                position={[x, 4.3]}
+                size={[1.35, 1.15]}
+                color={SCREEN_TEXT}
+                level={chromeLevel}
+              />
+            )}
+            <TermText
+              position={[x, 4.3]}
+              size={0.8}
+              color={lit ? SCREEN_BACKGROUND : SCREEN_TEXT_DIM}
+              anchorX="center"
+            >
+              {day}
+            </TermText>
+          </group>
+        );
+      })}
+      <Rect
+        position={[0, 3.5]}
+        size={[10.4, 0.06]}
+        color={SCREEN_CHROME}
+        level={chromeLevel}
+      />
+
+      <TermText position={[0, 1.7]} size={1.35} color={SCREEN_TEXT} anchorX="center">
+        {`${date.toLocaleString("default", { month: "long" })} ${date.getDate()}`}
+      </TermText>
+      <TermText position={[0, -0.3]} size={2} color={SCREEN_TEXT} anchorX="center">
+        {date.getFullYear()}
+      </TermText>
+      <TermText position={[0, -2.2]} size={1.1} color={SCREEN_TEXT_DIM} anchorX="center">
+        {time}
+      </TermText>
+
+      {/* Status line */}
+      <Rect
+        position={[0, -3.5]}
+        size={[10.4, 0.06]}
+        color={SCREEN_CHROME}
+        level={chromeLevel}
+      />
+      <TermText position={[-4.9, -4.3]} size={0.9} color={SCREEN_TEXT}>
+        {`DAY ${pad3(dayOfYear(date))}`}
+      </TermText>
+      <TermText position={[4.9, -4.3]} size={0.9} color={SCREEN_TEXT} anchorX="right">
+        {date.getFullYear() % 4 === 0 ? "LEAP YR" : "STD YR"}
+      </TermText>
     </Screen>
   );
 };
@@ -693,6 +882,14 @@ const SCROLLBAR_X = 5.1;
 const SCROLLBAR_W = 0.5;
 const LIST_VISIBLE_ROWS = Math.ceil(LIST_VISIBLE_HEIGHT / LIST_ROW_HEIGHT);
 const LIST_WINDOW_BUFFER = 4;
+// Row text: author line, then one line of quote, laid out from the actual
+// sizes so it stays inside the row
+const LIST_PADDING = 0.35;
+const LIST_AUTHOR_SIZE = 0.8 * SCREEN_FONT_SCALE;
+const LIST_BODY_SIZE = 0.62 * SCREEN_FONT_SCALE;
+// How many characters of quote fit on that line (VT323 glyphs are 0.4em
+// wide), leaving room for the "..."
+const LIST_BODY_CHARS = Math.floor((LIST_WIDTH - 0.6) / (LIST_BODY_SIZE * 0.4));
 
 type QuoteRowProps = {
   quote: FullQuote;
@@ -705,7 +902,9 @@ const QuoteRow = ({ quote, isActive, isHovered, y }: QuoteRowProps) => {
   const bgColor = isActive || isHovered ? "#0f3e3a" : SCREEN_BACKGROUND;
   const textColor = SCREEN_TEXT_SMALL;
   const truncated =
-    quote.body.length > 48 ? quote.body.substring(0, 45) + "..." : quote.body;
+    quote.body.length > LIST_BODY_CHARS
+      ? quote.body.substring(0, LIST_BODY_CHARS - 3).trimEnd() + "..."
+      : quote.body;
 
   return (
     <group position={[LIST_LEFT, y, 0]}>
@@ -716,26 +915,30 @@ const QuoteRow = ({ quote, isActive, isHovered, y }: QuoteRowProps) => {
       <DreiText
         maxWidth={LIST_WIDTH - 0.6}
         color={textColor}
-        fontSize={0.85 * SCREEN_FONT_SCALE}
+        fontSize={LIST_AUTHOR_SIZE}
         lineHeight={SCREEN_LINE_HEIGHT}
         font={SCREEN_FONT}
         anchorX="left"
         anchorY="top"
         textAlign="left"
-        position={[0.3, -0.35, 0.01]}
+        position={[0.3, -LIST_PADDING, 0.01]}
       >
         {quote.author.name}
       </DreiText>
       <DreiText
         maxWidth={LIST_WIDTH - 0.6}
         color={textColor}
-        fontSize={0.6 * SCREEN_FONT_SCALE}
+        fontSize={LIST_BODY_SIZE}
         lineHeight={SCREEN_LINE_HEIGHT}
         font={SCREEN_FONT}
         anchorX="left"
         anchorY="top"
         textAlign="left"
-        position={[0.3, -1.3, 0.01]}
+        position={[
+          0.3,
+          -LIST_PADDING - LIST_AUTHOR_SIZE * SCREEN_LINE_HEIGHT,
+          0.01,
+        ]}
       >
         {truncated}
       </DreiText>
@@ -947,19 +1150,104 @@ const QuoteListScreen = ({
   );
 };
 
+type RandomScreenProps = {
+  total: number;
+  // Picks a random quote and returns its index (null if there's no choice)
+  onRandom: () => number | null;
+} & ScreenProps;
+
+// How long the reel shows the picked number before spinning again
+const RANDOM_HOLD_SECONDS = 1.6;
+
+// The big fancy button: a crawling dashed frame, a slot-reel counter that
+// spins through quote numbers and locks onto the one picked, and a label
+// that scrambles and decrypts itself now and then
+const RandomScreen = ({ total, onRandom, ...props }: RandomScreenProps) => {
+  const [hovered, setHovered] = useState(false);
+  const [reel, setReel] = useState("000");
+  const [locked, setLocked] = useState<number | null>(null);
+  const lockedUntil = useRef(0);
+  const lockPending = useRef(false);
+  const nextSpin = useRef(0);
+  const label = useDecrypt("RANDOM", hovered);
+
+  const ink = hovered ? SCREEN_BACKGROUND : SCREEN_TEXT;
+  const inkDim = hovered ? "#1d4a44" : SCREEN_TEXT_DIM;
+  const chrome = hovered ? "#24564f" : SCREEN_CHROME;
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (lockPending.current) {
+      lockPending.current = false;
+      lockedUntil.current = t + RANDOM_HOLD_SECONDS;
+    }
+    if (locked !== null) {
+      if (t >= lockedUntil.current) setLocked(null);
+      return;
+    }
+    // Spin faster while hovered
+    if (t >= nextSpin.current) {
+      nextSpin.current = t + (hovered ? 0.05 : 0.12);
+      setReel(pad3(1 + Math.floor(Math.random() * Math.max(total, 1))));
+    }
+  });
+
+  return (
+    <Screen
+      {...props}
+      onClick={() => {
+        const picked = onRandom();
+        if (picked === null) return;
+        setLocked(picked);
+        // Hold timer starts on the next frame, from the render loop's clock
+        lockedUntil.current = Infinity;
+        lockPending.current = true;
+      }}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+    >
+      <color
+        attach="background"
+        args={[hovered ? "#3e7d75" : SCREEN_BACKGROUND]}
+      />
+      <MarchingBorder half={5} color={chrome} />
+      <TermText position={[0, 2.5]} size={1} color={inkDim} anchorX="center">
+        {`[ ${locked !== null ? pad3(locked + 1) : reel} ]`}
+      </TermText>
+      <TermText position={[0, -0.2]} size={2.3} color={ink} anchorX="center">
+        {label}
+      </TermText>
+      <TermText position={[0, -2.6]} size={0.8} color={inkDim} anchorX="center">
+        {locked !== null ? "LOCKED" : "ROLL ?"}
+      </TermText>
+    </Screen>
+  );
+};
+
 type NavScreenProps = {
   label: String;
   clickEventHandler: () => void;
   invert?: boolean;
+  // Animated chevrons pointing this way above the label
+  direction?: "left" | "right";
+  // Small hint under the label: the number of the quote it leads to
+  keyHint?: string;
 } & ScreenProps;
 
 const NavScreen = ({
   label,
   clickEventHandler,
   invert,
+  direction,
+  keyHint,
   ...props
 }: NavScreenProps) => {
   const [hovered, setHovered] = useState(false);
+  // Everything inverts on hover, like a selected terminal field
+  const ink = hovered ? SCREEN_BACKGROUND : SCREEN_TEXT;
+  const chrome = hovered ? "#24564f" : SCREEN_CHROME;
+  const chromeDim = hovered ? "#2f6560" : SCREEN_CHROME_DIM;
+  const inkDim = hovered ? "#1d4a44" : SCREEN_TEXT_DIM;
 
   return (
     <Screen
@@ -984,16 +1272,25 @@ const NavScreen = ({
         wrap="wrap"
       >
         <Box>
-          <Text
-            maxWidth={13}
-            color={!hovered ? SCREEN_TEXT : SCREEN_BACKGROUND}
-            fontSize={2}
-            textAlign="center"
-          >
+          <Text maxWidth={13} color={ink} fontSize={2} textAlign="center">
             {label}
           </Text>
         </Box>
       </Flex>
+      <CornerBrackets inset={5} length={1.4} color={chrome} />
+      {direction && (
+        <Chevrons
+          direction={direction}
+          y={2.6}
+          color={ink}
+          dimColor={chromeDim}
+        />
+      )}
+      {keyHint && (
+        <TermText position={[0, -2.9]} size={0.9} color={inkDim} anchorX="center">
+          {`[ ${keyHint} ]`}
+        </TermText>
+      )}
     </Screen>
   );
 };

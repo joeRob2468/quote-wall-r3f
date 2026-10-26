@@ -31,10 +31,28 @@ const fogLightColors = {
 const fogLightDirections = {
   value: Array.from(
     { length: MAX_FOG_LIGHTS },
-    () => new THREE.Vector4(0, 0, 0, -2)
+    () => new THREE.Vector4(0, 0, 0, -2),
   ),
 };
 const usedSlots = new Array<boolean>(MAX_FOG_LIGHTS).fill(false);
+// Full-strength colour and optional live level (0-1) per slot, for lights
+// whose brightness changes (e.g. flickering screens)
+const baseColors = Array.from(
+  { length: MAX_FOG_LIGHTS },
+  () => new THREE.Color(),
+);
+const levels: ({ current: number } | null)[] = new Array(MAX_FOG_LIGHTS).fill(
+  null,
+);
+
+// Applies each light's live level; call once per frame
+export const updateFogLights = () => {
+  levels.forEach((level, slot) => {
+    if (!level || !usedSlots[slot]) return;
+    const c = baseColors[slot];
+    fogLightColors.value[slot].set(c.r, c.g, c.b).multiplyScalar(level.current);
+  });
+};
 
 type FogLight = {
   position: THREE.Vector3;
@@ -43,6 +61,8 @@ type FogLight = {
   // Point the glow along this direction instead of all around
   direction?: THREE.Vector3;
   coneAngle?: number;
+  // Live brightness multiplier, read every frame by updateFogLights
+  level?: { current: number };
 };
 
 // Makes a light glow in the fog. Returns a function that removes it again.
@@ -52,14 +72,16 @@ export const addFogLight = ({
   intensity,
   direction,
   coneAngle = Math.PI / 4,
+  level,
 }: FogLight) => {
   const slot = usedSlots.indexOf(false);
   if (slot === -1) return () => {};
   usedSlots[slot] = true;
 
   fogLightPositions.value[slot].copy(position);
-  const c = new THREE.Color(color).multiplyScalar(intensity);
+  const c = baseColors[slot].set(color).multiplyScalar(intensity);
   fogLightColors.value[slot].set(c.r, c.g, c.b);
+  levels[slot] = level ?? null;
   if (direction) {
     const d = direction.clone().normalize();
     fogLightDirections.value[slot].set(d.x, d.y, d.z, Math.cos(coneAngle));
@@ -69,6 +91,7 @@ export const addFogLight = ({
 
   return () => {
     usedSlots[slot] = false;
+    levels[slot] = null;
     fogLightColors.value[slot].set(0, 0, 0);
   };
 };

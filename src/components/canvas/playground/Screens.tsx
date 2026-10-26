@@ -32,7 +32,11 @@ import { CRTEffect } from "./shaders/CRTEffect";
 import { FullQuote } from "@/types/quote";
 import type { GLTFResult } from "./Computers";
 import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
-import Text from "./Text";
+import Text, {
+  SCREEN_FONT,
+  SCREEN_FONT_SCALE,
+  SCREEN_LINE_HEIGHT,
+} from "./Text";
 import { addFogLight } from "./driftingFog";
 import { addScreenBloomTarget } from "./ScreenBloom";
 import { triggerDriveBurst } from "./DriveLights";
@@ -712,8 +716,9 @@ const QuoteRow = ({ quote, isActive, isHovered, y }: QuoteRowProps) => {
       <DreiText
         maxWidth={LIST_WIDTH - 0.6}
         color={textColor}
-        fontSize={0.85}
-        font="/IBMPlexMono-Medium.ttf"
+        fontSize={0.85 * SCREEN_FONT_SCALE}
+        lineHeight={SCREEN_LINE_HEIGHT}
+        font={SCREEN_FONT}
         anchorX="left"
         anchorY="top"
         textAlign="left"
@@ -724,8 +729,9 @@ const QuoteRow = ({ quote, isActive, isHovered, y }: QuoteRowProps) => {
       <DreiText
         maxWidth={LIST_WIDTH - 0.6}
         color={textColor}
-        fontSize={0.6}
-        font="/IBMPlexMono-Medium.ttf"
+        fontSize={0.6 * SCREEN_FONT_SCALE}
+        lineHeight={SCREEN_LINE_HEIGHT}
+        font={SCREEN_FONT}
         anchorX="left"
         anchorY="top"
         textAlign="left"

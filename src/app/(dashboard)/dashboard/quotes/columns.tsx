@@ -24,6 +24,7 @@ export const columns: ColumnDef<Quote>[] = [
   {
     accessorKey: "context",
     header: "Context",
+    meta: { hideOnMobile: true },
   },
   {
     accessorKey: "author.name",
@@ -33,6 +34,7 @@ export const columns: ColumnDef<Quote>[] = [
   {
     accessorKey: "date",
     header: "Date",
+    meta: { hideOnMobile: true },
     size: 140,
     cell: ({ row }) => {
       const date = row.original.date;
@@ -45,6 +47,7 @@ export const columns: ColumnDef<Quote>[] = [
   },
   {
     id: "actions",
+    meta: { hideOnMobile: true },
     size: 64,
     cell: ({ row }) => {
       const quote = row.original;

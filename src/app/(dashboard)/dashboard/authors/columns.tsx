@@ -27,6 +27,7 @@ export const columns: ColumnDef<Author>[] = [
   },
   {
     id: "actions",
+    meta: { hideOnMobile: true },
     size: 64,
     cell: ({ row }) => {
       const author = row.original;

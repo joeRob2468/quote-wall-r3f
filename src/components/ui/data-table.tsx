@@ -2,6 +2,7 @@
 
 import {
   ColumnDef,
+  RowData,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
@@ -23,6 +24,16 @@ import { useRouter } from "next/navigation";
 
 // Fits two lines of text-sm plus p-4 padding, so every row is the same height
 const ROW_HEIGHT = "h-[72px]";
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    // Drop the column below md so the table fits a phone without scrolling
+    hideOnMobile?: boolean;
+  }
+}
+
+const mobileClass = (hideOnMobile?: boolean) =>
+  hideOnMobile ? "hidden md:table-cell" : undefined;
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -68,13 +79,16 @@ export function DataTable<TData, TValue>({
   return (
     <>
       <div className="rounded-md border">
-        <Table className="table-fixed min-w-[640px]">
+        <Table className="table-fixed md:min-w-[640px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
+                    className={mobileClass(
+                      header.column.columnDef.meta?.hideOnMobile
+                    )}
                     style={{ width: header.column.columnDef.size }}
                   >
                     {header.isPlaceholder
@@ -98,7 +112,13 @@ export function DataTable<TData, TValue>({
                   onClick={(event) => onRowClick(event, row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={ROW_HEIGHT}>
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        ROW_HEIGHT,
+                        mobileClass(cell.column.columnDef.meta?.hideOnMobile)
+                      )}
+                    >
                       <div className="line-clamp-2 max-h-10 break-words">
                         {flexRender(
                           cell.column.columnDef.cell,

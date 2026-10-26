@@ -25,6 +25,7 @@ export const columns: ColumnDef<SafeUser>[] = [
   {
     accessorKey: "email",
     header: "Email",
+    meta: { hideOnMobile: true },
   },
   {
     accessorKey: "role",
@@ -45,6 +46,7 @@ export const columns: ColumnDef<SafeUser>[] = [
   },
   {
     id: "actions",
+    meta: { hideOnMobile: true },
     size: 64,
     cell: ({ row }) => {
       const user = row.original;

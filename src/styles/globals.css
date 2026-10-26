@@ -58,3 +58,309 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+/* Same face the monitors use; served from public so the overlay and the
+   scene's text share one download */
+@font-face {
+  font-family: "VT323";
+  src: url("/VT323-Regular.ttf") format("truetype");
+  font-display: block;
+}
+
+/* Terminal styling for the boot screen and the floating menu. Colours follow
+   the scene: fog background, screen teal text. Kept out of Tailwind's layers,
+   which would purge the status classes built at runtime. */
+:root {
+  --boot-bg: #050b0b;
+  --boot-panel: #06201e;
+  --boot-text: #9fe8d6;
+  --boot-dim: #4f8f80;
+}
+
+/* Boot overlay shown until the scene is drawing (components/preloader.tsx) */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: radial-gradient(
+      ellipse at center,
+      var(--boot-panel) 0%,
+      var(--boot-bg) 70%
+    );
+  color: var(--boot-text);
+  font-family: "VT323", ui-monospace, monospace;
+  font-size: 1.375rem;
+  line-height: 1.15;
+  text-shadow: 0 0 6px rgb(159 232 214 / 0.55);
+  animation: boot-flicker 4s infinite;
+}
+
+/* Scanlines */
+.boot-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0) 0,
+    rgb(0 0 0 / 0) 2px,
+    rgb(0 0 0 / 0.28) 3px
+  );
+}
+
+.boot-panel {
+  width: 100%;
+  max-width: 30rem;
+}
+
+.boot-header,
+.boot-footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.boot-header {
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--boot-dim);
+}
+
+.boot-dim {
+  color: var(--boot-dim);
+}
+
+.boot-rows {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.boot-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.boot-row.is-wait {
+  opacity: 0.4;
+}
+
+.boot-tag {
+  width: 3rem;
+  color: var(--boot-dim);
+}
+
+.boot-leader {
+  flex: 1;
+  min-width: 1rem;
+  border-bottom: 2px dotted var(--boot-dim);
+  opacity: 0.6;
+}
+
+.boot-status {
+  width: 1.5rem;
+  text-align: right;
+}
+
+.boot-spinner::after {
+  content: "|";
+  animation: boot-spin 0.5s steps(1) infinite;
+}
+
+.boot-bar {
+  height: 0.9rem;
+  margin-top: 1rem;
+  padding: 2px;
+  border: 1px solid var(--boot-dim);
+}
+
+.boot-bar-fill {
+  height: 100%;
+  /* Segmented, like a block-character bar */
+  background: repeating-linear-gradient(
+    to right,
+    var(--boot-text) 0,
+    var(--boot-text) 8px,
+    transparent 8px,
+    transparent 11px
+  );
+  box-shadow: 0 0 8px rgb(159 232 214 / 0.45);
+  transition: width 0.3s steps(6);
+}
+
+.boot-footer {
+  margin-top: 0.4rem;
+  color: var(--boot-dim);
+}
+
+.boot-cursor {
+  animation: boot-blink 1s steps(1) infinite;
+}
+
+.boot-exit {
+  pointer-events: none;
+  animation: boot-fade 0.3s ease-out forwards;
+}
+
+@keyframes boot-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes boot-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.82;
+  }
+  94% {
+    opacity: 1;
+  }
+  96% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes boot-spin {
+  0% {
+    content: "|";
+  }
+  25% {
+    content: "/";
+  }
+  50% {
+    content: "-";
+  }
+  75% {
+    content: "\\";
+  }
+}
+
+@keyframes boot-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-screen,
+  .boot-spinner::after,
+  .boot-cursor {
+    animation: none;
+  }
+  /* Keeps the fade, which isn't motion */
+  .boot-exit {
+    animation: boot-fade 0.3s ease-out forwards;
+  }
+}
+
+/* Floating menu (components/site-menu.tsx) */
+.term-menu-trigger,
+.term-menu {
+  font-family: "VT323", ui-monospace, monospace;
+  color: var(--boot-text);
+  background: rgb(5 11 11 / 0.82);
+  border: 1px solid var(--boot-dim);
+  text-shadow: 0 0 6px rgb(159 232 214 / 0.55);
+  backdrop-filter: blur(4px);
+  /* Clicks on the scene shouldn't select the menu's text */
+  user-select: none;
+}
+
+.term-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+.term-menu-trigger:hover,
+.term-menu-trigger[data-state="open"] {
+  background: var(--boot-panel);
+  box-shadow: 0 0 12px rgb(159 232 214 / 0.25);
+}
+.term-menu-trigger:focus-visible {
+  outline: 1px solid var(--boot-text);
+  outline-offset: 2px;
+}
+
+.term-menu {
+  z-index: 50;
+  min-width: 13rem;
+  padding: 0.35rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  box-shadow: 0 0 18px rgb(159 232 214 / 0.15);
+}
+.term-menu[data-state="open"] {
+  animation: boot-fade-in 0.12s ease-out;
+}
+
+.term-menu-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0.5rem 0.35rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--boot-dim);
+  color: var(--boot-dim);
+}
+
+.term-menu-user {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--boot-text);
+}
+
+.term-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  outline: none;
+}
+.term-menu-item::before {
+  content: ">";
+  width: 1ch;
+  margin-right: 0.6rem;
+  opacity: 0;
+}
+/* Radix marks the keyboard/pointer-highlighted item */
+.term-menu-item[data-highlighted] {
+  background: var(--boot-text);
+  color: var(--boot-bg);
+  text-shadow: none;
+}
+.term-menu-item[data-highlighted]::before {
+  opacity: 1;
+}
+
+.term-menu-separator {
+  height: 1px;
+  margin: 0.25rem 0;
+  background: var(--boot-dim);
+  opacity: 0.6;
+}
+
+@keyframes boot-fade-in {
+  from {
+    opacity: 0;
+  }
+}

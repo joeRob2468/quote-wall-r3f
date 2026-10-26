@@ -16,6 +16,7 @@ import { Computers } from "./Computers";
 import { Model } from "./Model";
 import { ScreenBloom } from "./ScreenBloom";
 import { LedClock } from "./LedClock";
+import { getLoadState, markReady, markSceneMounted } from "./loadState";
 import { Smoke } from "./Smoke";
 import {
   addFogLight,
@@ -47,7 +48,11 @@ installDriftingFog();
 const CAMERA_POSITION = { x: 0.5, y: 3, z: -2.6 };
 const CAMERA_TARGET_POSITION = { x: 0.3, y: 3.15, z: 1.35 };
 
-export const Playground = () => {
+type PlaygroundProps = {
+  initialQuoteId?: string;
+};
+
+export const Playground = ({ initialQuoteId }: PlaygroundProps) => {
   return (
     <Three>
       <Suspense fallback={null}>
@@ -100,7 +105,7 @@ export const Playground = () => {
         {/* Main Scene */}
         <group position={[-0, -1, 0]}>
           <Model scale={0.5} lampOn={LAMP_ON} />
-          <Computers scale={0.5} />
+          <Computers scale={0.5} initialQuoteId={initialQuoteId} />
         </group>
 
         <Smoke glowCenter={SMOKE_GLOW_CENTER} />
@@ -138,7 +143,7 @@ export const Playground = () => {
           <ScreenBloom intensity={3.75} radius={0.9} />
           {/* Cool blue lift in the shadows; after bloom so the haze is graded
             too, before posterize so the bands come from graded colours */}
-          <ColorGrade shadowTint="#1a4a5c" shadowStrength={0.03} contrast={0.35} />
+          <ColorGrade shadowTint="#1a4a5c" shadowStrength={0.02} contrast={0.5} />
           <AdaptivePixelation baseGranularity={2} referenceWidth={1920} />
           <Noise
             premultiply
@@ -148,10 +153,38 @@ export const Playground = () => {
         </EffectComposer>
         <BakeShadows />
         <CameraRig />
+        <SceneReady />
       </Suspense>
     </Three>
   );
 };
+
+// Frames to draw once everything has mounted before lifting the boot
+// overlay; the first ones compile shaders and stall
+const READY_FRAMES = 3;
+
+// Inside the Suspense, so it only mounts once the model has loaded. Tells the
+// boot overlay when the screens have content too and a few frames are drawn.
+function SceneReady() {
+  const { gl, scene, camera } = useThree();
+  const frames = useRef(0);
+
+  useLayoutEffect(() => {
+    // Compile now rather than on first sight, so the camera rig turning
+    // toward something new doesn't stall
+    gl.compile(scene, camera);
+    return markSceneMounted();
+  }, [gl, scene, camera]);
+
+  useFrame(() => {
+    const { ready, screensMounted, screensLoaded } = getLoadState();
+    if (ready || screensLoaded < screensMounted) return;
+    frames.current += 1;
+    if (frames.current >= READY_FRAMES) markReady();
+  });
+
+  return null;
+}
 
 const MAX_PIXELATION_GRANULARITY_MULTIPLIER = 1;
 

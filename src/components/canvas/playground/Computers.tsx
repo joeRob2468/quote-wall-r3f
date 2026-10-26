@@ -116,7 +116,11 @@ export type GLTFResult = GLTF & {
   }
 }
 
-export const Computers = (props: JSX.IntrinsicElements['group']) => {
+type ComputersProps = JSX.IntrinsicElements['group'] & {
+  initialQuoteId?: string
+}
+
+export const Computers = ({ initialQuoteId, ...props }: ComputersProps) => {
   const { nodes, materials } = useGLTF('/office_scene-transformed.glb') as GLTFResult
   return (
     <group {...props} dispose={null}>
@@ -159,7 +163,7 @@ export const Computers = (props: JSX.IntrinsicElements['group']) => {
       <mesh name="Small_Monitor_Screen005" castShadow receiveShadow geometry={nodes.Small_Monitor_Screen005.geometry} material={materials['Basic Screen']} position={[-2.345, 8.876, 1.829]} rotation={[-Math.PI / 2, 0, -0.257]} />
       */}
 
-      <Screens nodes={nodes} materials={materials} />
+      <Screens nodes={nodes} materials={materials} initialQuoteId={initialQuoteId} />
 
       <IndicatorLights
         geometry={nodes.Power.geometry}

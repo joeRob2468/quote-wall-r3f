@@ -40,6 +40,7 @@ import Text, {
 import { addFogLight } from "./driftingFog";
 import { addScreenBloomTarget } from "./ScreenBloom";
 import { triggerDriveBurst } from "./DriveLights";
+import { addLoadedScreen, addMountedScreen } from "./loadState";
 import {
   Chevrons,
   CornerBrackets,
@@ -53,43 +54,65 @@ import {
 } from "./TerminalDecor";
 import { getQuotes } from "@/data/quote";
 import { useQuery } from "@tanstack/react-query";
+import { QUOTE_PARAM } from "@/config/site";
 
 type ScreensProps = {
   nodes: GLTFResult["nodes"];
   materials: GLTFResult["materials"];
+  // From the page URL, so a shared link opens on that quote
+  initialQuoteId?: string;
 };
-export const Screens = ({ nodes, materials }: ScreensProps) => {
+export const Screens = ({ nodes, materials, initialQuoteId }: ScreensProps) => {
   const { data, isPending, isError } = useQuery({
     queryKey: ["quotes"],
     queryFn: async () => await getQuotes(),
   });
 
-  const [quoteIndex, setQuoteIndex] = useState<number>(0);
+  // Tracked by id rather than position, so a refetch that reorders the list
+  // keeps the same quote up. An unknown id (bad link, deleted quote) falls
+  // back to the first quote.
+  const [quoteId, setQuoteId] = useState(initialQuoteId);
+  const quotes = data ?? [];
+  const currentIndex = Math.max(
+    0,
+    quotes.findIndex((quote) => quote.id === quoteId)
+  );
+  const currentQuoteId = quotes[currentIndex]?.id;
+
+  const showQuoteAt = (index: number) => {
+    if (!quotes.length) return;
+    setQuoteId(quotes[(index + quotes.length) % quotes.length].id);
+  };
 
   // Drive lights burst whenever the quote changes, like the screen glitch
-  const lastQuoteIndex = useRef(quoteIndex);
+  const lastQuoteId = useRef(currentQuoteId);
   useEffect(() => {
-    if (lastQuoteIndex.current === quoteIndex) return;
-    lastQuoteIndex.current = quoteIndex;
+    if (lastQuoteId.current === currentQuoteId) return;
+    lastQuoteId.current = currentQuoteId;
     triggerDriveBurst();
-  }, [quoteIndex]);
+  }, [currentQuoteId]);
 
-  const showPreviousQuote = () => {
-    if (!data?.length) return;
-    setQuoteIndex((prev) => (prev <= 0 ? data.length - 1 : prev - 1));
-  };
-  const showNextQuote = () => {
-    if (!data?.length) return;
-    setQuoteIndex((prev) => (prev >= data.length - 1 ? 0 : prev + 1));
-  };
+  // Keep the address bar on the quote being shown, so it can be shared.
+  // Replaced rather than pushed, so Back leaves the page instead of stepping
+  // through every quote seen.
+  useEffect(() => {
+    if (!currentQuoteId) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get(QUOTE_PARAM) === currentQuoteId) return;
+    url.searchParams.set(QUOTE_PARAM, currentQuoteId);
+    window.history.replaceState(null, "", url);
+  }, [currentQuoteId]);
+
+  const showPreviousQuote = () => showQuoteAt(currentIndex - 1);
+  const showNextQuote = () => showQuoteAt(currentIndex + 1);
   // Returns the index it picked, so the Random screen can show it
   const showRandomQuote = () => {
-    if (!data || data.length <= 1) return null;
+    if (quotes.length <= 1) return null;
     let next: number;
     do {
-      next = Math.floor(Math.random() * data.length);
-    } while (next === quoteIndex);
-    setQuoteIndex(next);
+      next = Math.floor(Math.random() * quotes.length);
+    } while (next === currentIndex);
+    showQuoteAt(next);
     return next;
   };
 
@@ -146,8 +169,6 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
     );
   }
 
-  // A refetch can shrink the list (e.g. quotes deleted in the dashboard)
-  const currentIndex = Math.min(quoteIndex, data.length - 1);
   const currentQuote = data[currentIndex];
 
   return (
@@ -193,7 +214,7 @@ export const Screens = ({ nodes, materials }: ScreensProps) => {
       <QuoteListScreen
         quotes={data}
         quoteIndex={currentIndex}
-        setQuoteIndex={setQuoteIndex}
+        setQuoteIndex={showQuoteAt}
         panel={nodes.Small_Monitor_Screen003.geometry}
         position={[5.902, 6.593, 2.304]}
         rotation={[-Math.PI / 2, 0, 0.186]}
@@ -462,6 +483,9 @@ const Screen = ({
     return [box.max.x - box.min.x, box.max.z - box.min.z];
   }, [panel]);
 
+  // Counts toward the boot overlay until the content below has resolved
+  useLayoutEffect(addMountedScreen, []);
+
   // Give the screen the extra screen-only bloom halo
   useLayoutEffect(() => {
     if (!panelRef.current) return;
@@ -512,6 +536,7 @@ const Screen = ({
               {...(fov !== undefined && { fov })}
             />
             {children}
+            <ScreenContentLoaded />
             <ScreenRenderer
               buffer={buffer}
               panelRef={panelRef}
@@ -551,6 +576,12 @@ const Screen = ({
       </mesh>
     </group>
   );
+};
+
+// Mounts alongside a screen's content, so only once its text has resolved
+const ScreenContentLoaded = () => {
+  useLayoutEffect(addLoadedScreen, []);
+  return null;
 };
 
 const ScreenLoading = ({

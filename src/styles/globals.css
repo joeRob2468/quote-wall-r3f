@@ -364,3 +364,9 @@
     opacity: 0;
   }
 }
+
+/* The scene renders at one pixel per pixelation block (pixelBlock.ts in the
+   playground); upscale it with hard edges instead of smoothing */
+.scene-canvas canvas {
+  image-rendering: pixelated;
+}

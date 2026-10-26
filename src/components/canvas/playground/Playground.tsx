@@ -7,15 +7,15 @@ import {
   DepthOfField,
   EffectComposer,
   Noise,
-  Pixelation,
 } from "@react-three/postprocessing";
 import { useFrame, useThree } from "@react-three/fiber";
 
-import { BlendFunction } from "postprocessing";
+import { BlendFunction, BloomEffect } from "postprocessing";
 import { Computers } from "./Computers";
 import { Model } from "./Model";
 import { ScreenBloom } from "./ScreenBloom";
 import { LedClock } from "./LedClock";
+import { matchBloomMipChain, screenTapOffset, usePixelBlock } from "./pixelBlock";
 import { getLoadState, markReady, markSceneMounted } from "./loadState";
 import { Smoke } from "./Smoke";
 import {
@@ -27,6 +27,7 @@ import {
 import ColorGrade from "./shaders/ColorGradeEffect";
 import PosterizationEffect from "./shaders/PosterizationEffect";
 import {
+  Ref,
   Suspense,
   useEffect,
   useLayoutEffect,
@@ -129,22 +130,14 @@ export const Playground = ({ initialQuoteId }: PlaygroundProps) => {
             bokehScale={3}
             height={700}
           />
-          {/* No threshold, so dim screens glow too; brighter things (the
-            boosted screens, the lamp bulb) just glow more */}
-          <Bloom
-            luminanceThreshold={0}
-            luminanceSmoothing={0.9}
-            mipmapBlur
-            intensity={2}
-            radius={0.85}
-          />
-          {/* Stronger bloom on just the screens, for a halo like the hover
-              glow without brightening the screen faces */}
-          <ScreenBloom intensity={3.75} radius={0.9} />
+          <SceneBloom />
           {/* Cool blue lift in the shadows; after bloom so the haze is graded
             too, before posterize so the bands come from graded colours */}
           <ColorGrade shadowTint="#1a4a5c" shadowStrength={0.02} contrast={0.5} />
-          <AdaptivePixelation baseGranularity={2} referenceWidth={1920} />
+          <BlockResolution />
+          {/* After bloom so the bands stay hard; one buffer pixel is one
+            pixelated block, so one dither value each */}
+          <PosterizationEffect bits={5} dither={1} />
           <Noise
             premultiply
             blendFunction={BlendFunction.ADD}
@@ -186,25 +179,50 @@ function SceneReady() {
   return null;
 }
 
-const MAX_PIXELATION_GRANULARITY_MULTIPLIER = 1;
+// Renders at one pixel per pixelation block (see pixelBlock.ts)
+function BlockResolution() {
+  const block = usePixelBlock();
+  const setDpr = useThree((state) => state.setDpr);
+  // The pixel ratio the canvas would otherwise render at
+  const initialDpr = useThree((state) => state.viewport.initialDpr);
 
-function AdaptivePixelation({
-  baseGranularity,
-  referenceWidth,
-}: {
-  baseGranularity: number;
-  referenceWidth: number;
-}) {
-  const { size } = useThree();
-  const scaled = baseGranularity * (size.width / referenceWidth);
-  const capped = Math.min(scaled, baseGranularity * MAX_PIXELATION_GRANULARITY_MULTIPLIER);
-  const granularity = Math.max(1, Math.round(capped));
+  useEffect(() => {
+    setDpr(initialDpr / block);
+    screenTapOffset.value = block > 1 ? 0.25 : 0;
+    return () => {
+      setDpr(initialDpr);
+      screenTapOffset.value = 0;
+    };
+  }, [setDpr, initialDpr, block]);
+
+  return null;
+}
+
+// Both blooms, with their mip chains matched to full resolution
+function SceneBloom() {
+  const block = usePixelBlock();
+  const bloomRef = useRef<BloomEffect>(null);
+  useEffect(() => {
+    if (!bloomRef.current) return;
+    return matchBloomMipChain(bloomRef.current, block);
+  }, [block]);
+
   return (
     <>
-      <Pixelation granularity={granularity} />
-      {/* After bloom and pixelation so the bands stay hard, with one dither
-          value per pixelated block */}
-      <PosterizationEffect bits={5} dither={1} pixelSize={granularity} />
+      {/* No threshold, so dim screens glow too; brighter things (the
+        boosted screens, the lamp bulb) just glow more */}
+      <Bloom
+        luminanceThreshold={0}
+        luminanceSmoothing={0.9}
+        mipmapBlur
+        intensity={2}
+        radius={0.85}
+        // Typed as the effect's class rather than an instance by the library
+        ref={bloomRef as unknown as Ref<typeof BloomEffect>}
+      />
+      {/* Stronger bloom on just the screens, for a halo like the hover
+          glow without brightening the screen faces */}
+      <ScreenBloom intensity={3.75} radius={0.9} block={block} />
     </>
   );
 }

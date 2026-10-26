@@ -5,6 +5,7 @@ import { useContext, useEffect, useMemo } from "react";
 
 import { EffectComposerContext } from "@react-three/postprocessing";
 import { Object3D } from "three";
+import { matchBloomMipChain } from "./pixelBlock";
 
 // Extra bloom on just the screens, for a glow halo like the hover state's
 // without brightening the screen faces.
@@ -35,9 +36,11 @@ export const addScreenBloomTarget = (object: Object3D) => {
 type ScreenBloomProps = {
   intensity: number;
   radius: number;
+  // Pixelation block size, for matching the mip chain (see pixelBlock.ts)
+  block: number;
 };
 
-export const ScreenBloom = ({ intensity, radius }: ScreenBloomProps) => {
+export const ScreenBloom = ({ intensity, radius, block }: ScreenBloomProps) => {
   const { scene, camera } = useContext(EffectComposerContext);
 
   const effect = useMemo(() => {
@@ -56,6 +59,8 @@ export const ScreenBloom = ({ intensity, radius }: ScreenBloomProps) => {
     effect.intensity = intensity;
     effect.mipmapBlurPass.radius = radius;
   }, [effect, intensity, radius]);
+
+  useEffect(() => matchBloomMipChain(effect, block), [effect, block]);
 
   useEffect(() => {
     const sync = () => effect.selection.set(targets);

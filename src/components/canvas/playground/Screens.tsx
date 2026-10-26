@@ -46,6 +46,7 @@ import { addFogLight } from "./driftingFog";
 import { addScreenBloomTarget } from "./ScreenBloom";
 import { triggerDriveBurst } from "./DriveLights";
 import { addLoadedScreen, addMountedScreen } from "./loadState";
+import { screenTapOffset } from "./pixelBlock";
 import {
   Chevrons,
   CornerBrackets,
@@ -447,6 +448,33 @@ const SCREEN_GLOW = 2.2;
 // Area lights need their lookup tables registered once before first render
 RectAreaLightUniformsLib.init();
 
+// The screen image is sampled four times per pixel, at the centres of the
+// full-resolution pixels the old pixelation pass averaged (see
+// screenTapOffset), so text and scanlines don't alias at block resolution
+const SCREEN_MAP_TAPS = /* glsl */ `
+  vec2 tapX = dFdx( vMapUv ) * screenTapOffset;
+  vec2 tapY = dFdy( vMapUv ) * screenTapOffset;
+  vec4 sampledDiffuseColor = 0.25 * (
+    texture2D( map, vMapUv - tapX - tapY ) + texture2D( map, vMapUv + tapX - tapY ) +
+    texture2D( map, vMapUv - tapX + tapY ) + texture2D( map, vMapUv + tapX + tapY )
+  );
+`;
+const tapScreenMap: THREE.Material["onBeforeCompile"] = (shader, renderer) => {
+  // Keep the fog's shared hook (driftingFog.ts), which this replaces
+  THREE.Material.prototype.onBeforeCompile(shader, renderer);
+  shader.uniforms.screenTapOffset = screenTapOffset;
+  shader.fragmentShader =
+    "uniform float screenTapOffset;\n" +
+    shader.fragmentShader.replace(
+      "#include <map_fragment>",
+      THREE.ShaderChunk.map_fragment.replace(
+        "vec4 sampledDiffuseColor = texture2D( map, vMapUv );",
+        SCREEN_MAP_TAPS
+      )
+    );
+};
+const screenMapCacheKey = () => "screen-map-taps";
+
 const Screen = ({
   panel,
   children,
@@ -558,6 +586,8 @@ const Screen = ({
           ref={panelMaterial}
           toneMapped={false}
           map={buffer.texture}
+          onBeforeCompile={tapScreenMap}
+          customProgramCacheKey={screenMapCacheKey}
           color={[SCREEN_GLOW, SCREEN_GLOW, SCREEN_GLOW]}
         />
         {/* Area lights shine along -Z; turn it to face out of the screen.

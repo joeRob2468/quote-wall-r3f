@@ -19,6 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
     >
       {children}
       <Scene
+        className="scene-canvas"
         style={{
           width: "100%",
           height: "100%",

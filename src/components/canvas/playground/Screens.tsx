@@ -721,6 +721,17 @@ const MainQuoteScreen = ({
   );
 };
 
+const AUTHOR_SIZE = 1.8;
+const AUTHOR_WIDTH = 9.4;
+// VT323 glyph width per unit of TermText size (0.4em at the font scale)
+const GLYPH_WIDTH_EM = 0.4 * SCREEN_FONT_SCALE;
+const CONTEXT_SIZE = 1.05;
+// About two lines of context at its size
+const CONTEXT_MAX_CHARS = 32;
+
+const clip = (text: string, max: number) =>
+  text.length > max ? text.slice(0, max - 3).trimEnd() + "..." : text;
+
 type MetaScreenProps = ScreenTextProps & {
   index: number;
   total: number;
@@ -751,34 +762,37 @@ const MetaScreen = ({ quote, index, total, ...props }: MetaScreenProps) => {
         {`${pad3(index + 1)}/${pad3(total)}`}
       </TermText>
 
+      {/* Name on one line, shrunk to fit if it's long */}
       <TermText
-        position={[0, 1.6]}
-        size={2.1}
+        position={[0, 1.9]}
+        size={Math.min(
+          AUTHOR_SIZE,
+          AUTHOR_WIDTH / (quote.author.name.length * GLYPH_WIDTH_EM)
+        )}
         color={SCREEN_TEXT}
         anchorX="center"
-        maxWidth={10}
       >
         {quote.author.name}
       </TermText>
       {quote.context ? (
         <TermText
-          position={[0, 0]}
-          size={0.85}
+          position={[0, 0.5]}
+          size={CONTEXT_SIZE}
           color={SCREEN_TEXT_DIM}
           anchorX="center"
           anchorY="top"
-          maxWidth={10}
+          maxWidth={AUTHOR_WIDTH}
         >
-          {quote.context}
+          {clip(quote.context, CONTEXT_MAX_CHARS)}
         </TermText>
       ) : null}
 
       {/* Voiceprint, which spikes whenever the quote changes */}
       <Waveform
         burstKey={quote.id}
-        y={-3.4}
+        y={-4.1}
         width={9.6}
-        maxHeight={2.6}
+        maxHeight={1.8}
         color={SCREEN_TEXT_DIM}
       />
     </Screen>

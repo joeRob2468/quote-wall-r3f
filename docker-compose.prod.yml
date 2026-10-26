@@ -38,7 +38,9 @@ services:
     restart: unless-stopped
     depends_on:
       - quote_wall_app
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
 
 volumes:
   postgres_data:
